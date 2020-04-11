@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 
 pub const Token = struct {
     id: Id,
@@ -7,6 +8,9 @@ pub const Token = struct {
 
     pub const Id = enum {
         invalid,
+        whitespace,
+        line,
+        line_ending,
         eof,
     };
 };
@@ -24,10 +28,20 @@ pub const Tokenizer = struct {
     }
 
     pub fn next(self: *Tokenizer) Token {
-        return Token{
-            .id =  .eof,
-            .start =  self.index,
-            .end =  undefined,
+        const result = Token{
+            .id = .eof,
+            .start = self.index,
+            .end = undefined,
         };
+        while (self.index < self.buffer.length) : (self.index += 1) {
+            const c = self.buffer[self.index];
+            switch (c) {}
+        }
+        return result;
     }
 };
+
+test "tabs - example1" {
+    // var p - TokenStream.init(s)
+    // testing.expectEqual(true, encodesTo("false", "false"));
+}

@@ -70,12 +70,12 @@ pub fn main() anyerror!void {
             const cwd = fs.cwd();
             for (input_files.toSliceConst()) |input_file| {
                 const source = try cwd.readFileAlloc(allocator, input_file, math.maxInt(usize));
-                try stdout.print("File: {}\nSource:\n````\n{}````\n", .{input_file, source});
+                try stdout.print("File: {}\nSource:\n````\n{}````\n", .{ input_file, source });
                 var tokenizer = Tokenizer.init(source);
                 while (true) {
                     const token = tokenizer.next();
                     if (token.id == .eof) break;
-                    try stdout.print("{}: {}\n", .{@tagName(token.id), source[token.start..token.end]});
+                    try stdout.print("{}: {}\n", .{ @tagName(token.id), source[token.start..token.end] });
                 }
             }
             return;
