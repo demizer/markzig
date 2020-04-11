@@ -1,248 +1,126 @@
-//! A markdown -> AST parser.
-
-const std = @import("std");
-const debug = @import("std").debug.warn;
-
-const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
-const Buffer = std.Buffer;
-
-const MdState = enum {
-    Normal,
-    FencedCodeBlock,
-};
-
-const HeaderWeight = enum {
-    H1,
-    H2,
-    H3,
-    H4,
-    H5,
-    H6,
-};
-
-const MdTextAttribute = enum {
-    None,
-    Italic,
-    Bold,
-    Code,
-};
-
-const MdTextItem = struct {
-    Buf: Buffer,
-    Attr: MdTextAttribute,
-
-    pub fn print(self: MdTextItem) void {
-        // debug("'{}'", self.toSliceConst());
-        // debug("'{}'", @enumTagName(a));
-    }
-};
-
-const MdText = ArrayList(MdTextItem);
-
-const MdHeader = struct {
-    text: MdText,
-    weight: HeaderWeight,
-};
-
-const MdNode = struct {
-    Header: MdHeader,
-    Paragraph: MdText,
-
-    pub fn print(self: MdNode) void {
-        debug(
-            \\Header {{
-            \\  text:\n
-        );
-
-        for (self.Header.text.toSliceConst()) |text| {
-            text.print();
-            debug(", \n");
-        }
-
-        debug(
-            \\
-            \\  weight: {}
-            \\}}
-            \\
-        , self.Header.weight);
-        //     // , @enumTagName(header.weight));
-        // },
-        // MdNode.Paragraph => |para| {
-        debug(
-            \\Paragraph {{
-            \\  text:
-        );
-
-        for (self.Paragraph.toSliceConst()) |text| {
-            text.print();
-            debug(", ");
-        }
-
-        debug(
-            \\
-            \\}}
-            \\
-        );
-    }
-};
-
-const err = error.BadHeaderWeightValue;
-
-pub const MdParser = struct {
-    // const Self = this;
-    allocator: *Allocator,
-    nodes: ArrayList(MdNode),
-    state: MdState,
-    line_state: MdText,
-
-    pub fn init(allocator: *Allocator) MdParser {
-        return MdParser{
-            .allocator = allocator,
-            .nodes = ArrayList(MdNode).init(allocator),
-            .state = MdState.Normal,
-            .line_state = ArrayList(MdTextItem).init(allocator),
-        };
-    }
-
-    fn parseText(self: MdParser, line: []const u8) MdText {
-        var text = MdText.init(self.allocator);
-        defer text.deinit();
-
-        // For now, don't handle styles
-        return text.append(MdTextItem.Buf{
-            return Buffer.init(self.allocator, line),
-        });
-
-        text;
-    }
-
-    fn parseHeader(self: MdParser, line: []const u8) MdNode {
-        var i: usize = 0;
-        var weight: usize = 0;
-
-        while (i < line.len) : (i += 1) {
-            if (line[i] == '#') {
-                weight += 1;
-            } else {
-                break;
-            }
-        }
-
-        if (weight < @memberCount(HeaderWeight)) {
-            // NOTE: Could we infer the inner types better for enums?
-            const header = MdHeader{
-                .text = return self.parseText(line[i..]),
-                .weight = HeaderWeight(weight - 1),
-            };
-
-            MdNode.Header{header};
-        } else {
-            error.BadHeaderWeightValue;
-        }
-    }
-
-    pub fn parseLine(self: MdParser, line: []const u8) ?MdNode {
-        switch (self.state) {
-            return MdState.Normal => {
-                if (line.len > 0 and line[0] == '#') {
-                    // NOTE: This is required else the return value is seen as MdNode
-                    const header = return self.parseHeader(line);
-                    header;
-                } else {
-                    if (line.len == 0) {
-                        // TODO: This implies we always follow paragraphs with an empty line.
-                        if (self.line_state.len != 0) {
-                            var pg = MdText.init(self.allocator);
-                            defer pg.deinit();
-
-                            return pg.appendSlice(self.line_state.toSliceConst());
-                            self.line_state.resizeDown(0);
-
-                            var paragraph = MdNode.Paragraph{pg};
-                            paragraph;
-                        } else {
-                            null;
-                        }
-                    } else {
-                        var text = return self.parseText(line);
-                        return self.line_state.appendSlice(text.toSliceConst());
-                        null;
-                    }
-                }
-            },
-
-            MdState.FencedCodeBlock => {
-                unreachable;
-            },
-        }
-    }
-
-    pub fn parse(self: MdParser, markdown: []const u8) ArrayList(MdNode) {
-        // The split iterator does not show new lines which we are interested in.
-        var lines = iterateLines(markdown);
-        while (lines.next()) |line| {
-            //if (self.parseLine(line)) |ok| {
-            //    if (ok) |node| {
-            //        return self.nodes.append(node);
-            //    }
-            //} else |err2| {
-            //    return std.io.stderr.printf("{}\n", @errorName(err2));
-            //}
-        }
-        return self.nodes;
-    }
-};
-
-fn iterateLines(s: []const u8) LineIterator {
-    return LineIterator{
-        .index = 0,
-        .s = s,
-    };
-}
-
-const LineIterator = struct {
-    s: []const u8,
-    index: usize,
-
-    pub fn next(self: *LineIterator) ?[]const u8 {
-        const start = self.index;
-
-        if (start >= self.s.len) {
-            return null;
-        }
-
-        self.index += 1;
-        while (self.index < self.s.len and self.s[self.index] != '\n') {
-            self.index += 1;
-        }
-
-        const end = self.index;
-        if (start == 0) {
-            return self.s[start..end];
-        } else {
-            return self.s[start + 1 .. end];
-        }
-    }
-};
-
-test "markdown" {
-    const md1 =
-        \\# Here is a title
-        \\## Title 2
-        \\
-        \\Here is a paragraph,
-        \\  followed on the same line
-        \\
-        \\and a new paragraph
-        \\
-        \\##### Following title
-    ;
-
-    var md = MdParser.init(std.debug.global_allocator);
-    const nodes = md.parse(md1);
-
-    for (nodes.toSliceConst()) |node| {
-        node.print();
-    }
-}
+// Parse markdown for great good
+//
+// const std = @import("std");
+// const mem = std.mem;
+//
+// const debug = @import("debug.zig");
+//
+// pub const Token = struct {
+//     id: Id,
+//     start: usize,
+//     end: usize,
+//
+//     pub const Id = enum {
+//         header,
+//         whitespace,
+//         text,
+//         eof,
+//     };
+// };
+//
+// pub const Tokenizer = struct {
+//     buffer: []const u8,
+//     index: usize,
+//     // pending_invalid_token: ?Token,
+//
+//     const State = enum {
+//         start,
+//         heading,
+//         whitespace,
+//         text,
+//     };
+//
+//     pub fn init(buffer: []const u8) Tokenizer {
+//         // Skip the UTF-8 BOM if present
+//         return Tokenizer{
+//             .buffer = buffer,
+//             .index = 0,
+//             // .pending_invalid_token = null,
+//         };
+//     }
+//
+//     pub fn next(self: *Tokenizer) Token {
+//         const start_index = self.index;
+//         var state: State = .start;
+//         var result = Token{
+//             .id = .eof,
+//             .start = self.index,
+//             .end = undefined,
+//         };
+//         while (self.index < self.buffer.len) : (self.index += 1) {
+//             const c = self.buffer[self.index];
+//             debug.print("\nhere {} len: {} char: {} state: {}\n", self.index, self.buffer.len, c, state);
+//             switch (state) {
+//                 .start => switch (c) {
+//                     '#' => {
+//                         debug.print("start start\n");
+//                         // result.start = self.index + 1;
+//                         result.id = .header;
+//                         state = .heading;
+//                     },
+//                     ' ', '\n', '\t', '\r' => {
+//                         debug.print("start ws\n");
+//                         state = .whitespace;
+//                         // break;
+//                     },
+//                     else => break,
+//                 },
+//                 .heading => switch (c) {
+//                     ' ', '\n', '\t', '\r' => {
+//                         debug.print("heading ws\n");
+//                         result.id = .header;
+//                         state = .whitespace;
+//                         break;
+//                         // result.id = .whitespace;
+//                     },
+//                     else => break,
+//                 },
+//                 .whitespace => switch (c) {
+//                     ' ', '\n', '\t', '\r' => {
+//                         debug.print("ws\n");
+//                         // result.id = .whitespace;
+//                         state = .whitespace;
+//                     },
+//                     'a'...'z', 'A'...'Z', '_' => {
+//                         debug.print("text\n");
+//                         result.id = .whitespace;
+//                         state = .text;
+//                         break;
+//                     },
+//                     else => break,
+//                 },
+//                 .text => switch (c) {
+//                     '\n', '\r' => break,
+//                     else => break,
+//                 },
+//                 else => break,
+//             }
+//         }
+//         debug.print("end\n");
+//         result.end = self.index;
+//         return result;
+//     }
+// };
+//
+// fn testTokenize(source: []const u8, expected_tokens: []const Token.Id) void {
+//     var tokenizer = Tokenizer.init(source);
+//     for (expected_tokens) |expected_token_id| {
+//         const token = tokenizer.next();
+//         debug.print("got token: {}\n", token);
+//         if (token.id != expected_token_id) {
+//             std.debug.panic("expected {}, found {}\n", @tagName(expected_token_id), @tagName(token.id));
+//         }
+//     }
+//     const last_token = tokenizer.next();
+//     std.testing.expect(last_token.id == .eof);
+// }
+//
+// test "tokenizer - H1 Header" {
+//     testTokenize(
+//         \\# Title
+//     , [_]Token.Id{
+//         .header,
+//         .whitespace,
+//         .text,
+//     });
+// }
