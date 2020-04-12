@@ -6,7 +6,7 @@
 * [Zig Docs](https://ziglang.org/documentation/master)
 * [Zig Standard Library Docs](https://ziglang.org/documentation/master/std)
 * [Zig Awesome Examples](https://github.com/nrdmn/awesome-zig)
-* [Zig github search](https://github.com/search?o=desc&q=stdout+language%3AZig&s=indexed&type=Code)
+* [Zig github search](https://github.com/search?q=json+getValue+language%3AZig+created%3A%3E2020-01-01&type=Code&ref=advsearch&l=&l=)
 * [zig-window (xorg window)](https://github.com/andrewrk/zig-window)
 * [zig-regex](https://github.com/tiehuis/zig-regex)
 * [zhp (Http)](https://github.com/frmdstryr/zhp)

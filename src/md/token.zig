@@ -1,4 +1,5 @@
 const std = @import("std");
+const test_util = @import("test_util.zig");
 const testing = std.testing;
 
 pub const Token = struct {
@@ -44,4 +45,10 @@ pub const Tokenizer = struct {
 test "tabs - example1" {
     // var p - TokenStream.init(s)
     // testing.expectEqual(true, encodesTo("false", "false"));
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const allocator = &arena.allocator;
+    const stdout = &std.io.getStdOut().outStream();
+    const out = test_util.getTest(allocator, 1);
+    try stdout.print("test: {}\n", .{out});
 }
