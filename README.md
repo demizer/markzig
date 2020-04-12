@@ -13,6 +13,6 @@ TBD
 
 Currently, 0/100 tests of the CommonMark 0.29 test suite pass!
 
-[] Output to HTML
-[] Output to Confluence
-[] Display markdown document in [webview](https://github.com/zserge/webview).
+- [ ] Output to HTML
+- [ ] Output to Confluence
+- [ ] Display markdown document in [webview](https://github.com/zserge/webview).
