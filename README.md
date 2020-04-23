@@ -15,7 +15,7 @@ TBD
 
 ### Milestone #1
 
-Parse and display a basic document. [test.md](https://github.com/demizer/zig-md2020/blob/master/test/test.md).
+Parse and display a basic document [test.md](https://github.com/demizer/zig-md2020/blob/master/test/test.md).
 
 - [ ] Tokenize
 - [ ] Parse
