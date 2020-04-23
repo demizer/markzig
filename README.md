@@ -11,8 +11,38 @@ TBD
 
 ## Status
 
-Currently, 0/100 tests of the CommonMark 0.29 test suite pass!
+0/649 tests of the CommonMark 0.29 test suite pass!
 
-- [ ] Output to HTML
-- [ ] Output to Confluence
+### Milestone #1
+
+Parse and display a basic document.
+
+```
+# Hello World
+
+**Bold** text.
+
+## Hello again
+
+*Itaclics* text.
+
+```
+A code block.
+```
+
+## A list
+
+1. One
+
+   List item text.
+
+1. Two
+
+1. Three
+
+```
+
+- [ ] Tokenize
+- [ ] Parse
+- [ ] Render to HTML
 - [ ] Display markdown document in [webview](https://github.com/zserge/webview).
