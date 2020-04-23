@@ -15,32 +15,7 @@ TBD
 
 ### Milestone #1
 
-Parse and display a basic document.
-
-```
-# Hello World
-
-**Bold** text.
-
-## Hello again
-
-*Itaclics* text.
-
-```
-A code block.
-```
-
-## A list
-
-1. One
-
-   List item text.
-
-1. Two
-
-1. Three
-
-```
+Parse and display a basic document. (test.md)[https://github.com/demizer/zig-md2020/blob/master/test/test.md].
 
 - [ ] Tokenize
 - [ ] Parse
