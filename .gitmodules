@@ -1,0 +1,6 @@
+[submodule "lib/log.zig"]
+	path = lib/log.zig
+	url = git@github.com:demizer/log.zig.git
+[submodule "lib/zig-time"]
+	path = lib/zig-time
+	url = git@github.com:demizer/time.git

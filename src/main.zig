@@ -1,4 +1,6 @@
 const std = @import("std");
+const logger = @import("zig-log");
+const time = @import("zig-time");
 const mem = std.mem;
 const fs = std.fs;
 const math = std.math;
@@ -10,6 +12,19 @@ const Cmd = enum {
     dump,
     tokenize,
 };
+
+var log = logger.Logger.new(std.io.getStdOut(), true);
+
+fn log_date_handler(
+    l: *logger.Logger,
+) void {
+    var local = time.Location.getLocal();
+    var now = time.now(&local);
+    var buf = std.ArrayList(u8).init(std.testing.allocator);
+    defer buf.deinit();
+    now.formatBuffer(&buf, time.RFC3339) catch unreachable;
+    l.file_stream.print("{} ", .{buf.items}) catch unreachable;
+}
 
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -23,6 +38,7 @@ pub fn main() anyerror!void {
 
     var input_files = std.ArrayList([]const u8).init(allocator);
 
+    log.set_date_handler(log_date_handler);
     while (arg_i < args.len) : (arg_i += 1) {
         const full_arg = args[arg_i];
         if (mem.startsWith(u8, full_arg, "--")) {
@@ -59,10 +75,10 @@ pub fn main() anyerror!void {
 
     switch (cmd) {
         .dump => {
-            _ = try std.io.getStdOut().write(
-                \\foo
-                \\
-            );
+            log.Info("FOO");
+            log.Info("BAR");
+            log.Warn("BAZ");
+            log.Error("An error occurred!");
             return;
         },
         .tokenize => {
