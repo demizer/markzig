@@ -1,17 +1,20 @@
 const std = @import("std");
+
+const log = @import("log.zig");
 const Token = @import("token.zig").Token;
 const Tokenizer = @import("token.zig").Tokenizer;
 
-const stdout = &std.io.getStdOut().outStream();
-
-pub fn atxHeader(self: *Tokenizer) !Token {
-    try stdout.print("have atxHeader\n", .{});
-    // if (c == '#') {
-    //     return self.atxHeader();
-    // }
+pub fn atxHeader(tok: *Tokenizer) !Token {
+    const c = tok.buffer[tok.index];
+    if (c == '#') {
+        // log.debug("have atxHeader\n");
+        // log.debugf("time {}\n", .{std.time.timestamp()});
+    }
+    // while (self.index < self.buffer.len) : (self.index += 1) {
+    //     try stdout.print("have char: {c}\n", .{c});
     return Token{
         .ID = .EOF,
-        .start = self.index,
+        .start = tok.index,
         .end = undefined,
     };
 }

@@ -1,5 +1,5 @@
 const std = @import("std");
-const logger = @import("zig-log");
+const log = @import("log/log.zig");
 const time = @import("zig-time");
 const mem = std.mem;
 const fs = std.fs;
@@ -13,19 +13,6 @@ const Cmd = enum {
     tokenize,
 };
 
-var log = logger.Logger.new(std.io.getStdOut(), true);
-
-fn log_date_handler(
-    l: *logger.Logger,
-) void {
-    var local = time.Location.getLocal();
-    var now = time.now(&local);
-    var buf = std.ArrayList(u8).init(std.testing.allocator);
-    defer buf.deinit();
-    now.formatBuffer(&buf, time.RFC3339) catch unreachable;
-    l.file_stream.print("{} ", .{buf.items}) catch unreachable;
-}
-
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -38,7 +25,6 @@ pub fn main() anyerror!void {
 
     var input_files = std.ArrayList([]const u8).init(allocator);
 
-    log.set_date_handler(log_date_handler);
     while (arg_i < args.len) : (arg_i += 1) {
         const full_arg = args[arg_i];
         if (mem.startsWith(u8, full_arg, "--")) {
@@ -75,23 +61,23 @@ pub fn main() anyerror!void {
 
     switch (cmd) {
         .dump => {
-            log.Info("FOO");
-            log.Info("BAR");
-            log.Warn("BAZ");
-            log.Error("An error occurred!");
+            // log.Info("FOO");
+            // log.Info("BAR");
+            // log.Warn("BAZ");
+            // log.Error("An error occurred!");
             return;
         },
         .tokenize => {
             const stdout = &std.io.getStdOut().outStream();
             const cwd = fs.cwd();
-            for (input_files.toSliceConst()) |input_file| {
+            for (input_files.items) |input_file| {
                 const source = try cwd.readFileAlloc(allocator, input_file, math.maxInt(usize));
                 try stdout.print("File: {}\nSource:\n````\n{}````\n", .{ input_file, source });
-                var tokenizer = Tokenizer.init(source);
+                var tokenizer = Tokenizer.init(allocator, source);
                 while (true) {
                     const token = tokenizer.next();
-                    if (token.id == .eof) break;
-                    try stdout.print("{}: {}\n", .{ @tagName(token.id), source[token.start..token.end] });
+                    // if (token.id == .eof) break;
+                    // try stdout.print("{}: {}\n", .{ @tagName(token.id), source[token.start..token.end] });
                 }
             }
             return;
