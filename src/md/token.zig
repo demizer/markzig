@@ -3,7 +3,7 @@ const test_util = @import("test_util.zig");
 const testing = std.testing;
 const mem = std.mem;
 
-usingnamespace @import("mylog");
+usingnamespace @import("log.zig");
 
 const ArrayList = std.ArrayList;
 
@@ -77,6 +77,7 @@ test "atx headings - example 32" {
     defer arena.deinit();
     const allocator = &arena.allocator;
     const out = try test_util.getTest(allocator, 32);
+    use_rfc3339_date_handler();
     log.Debugf("test: {}\n", .{out});
     var p = Tokenizer.init(allocator, out);
     while (true) {

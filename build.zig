@@ -2,8 +2,8 @@ const Builder = @import("std").build.Builder;
 
 pub fn build(b: *Builder) void {
     const t = b.addTest("src/md/token.zig");
+    t.addPackagePath("zig-time", "lib/zig-time/src/time.zig");
     t.addPackagePath("zig-log", "lib/log.zig/src/index.zig");
-    t.addPackagePath("mylog", "src/log/log.zig");
     b.step("test", "Run all tests").dependOn(&t.step);
 
     const mode = b.standardReleaseOptions();
