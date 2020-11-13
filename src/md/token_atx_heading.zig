@@ -1,21 +1,19 @@
 const std = @import("std");
+const mem = std.mem;
+const Lexer = @import("lexer.zig").Lexer;
+const Token = @import("token.zig").Token;
 
-usingnamespace @import("log.zig");
-
-const token = @import("token.zig");
-const Tokenizer = @import("token.zig").Tokenizer;
-
-pub fn ruleAtxHeader(t: *Tokenizer) !?token.Token {
-    var index: u32 = t.index;
-    while (t.getChar(index)) |val| {
-        if (val == '#') {
+pub fn ruleAtxHeader(l: *Lexer) !?Token {
+    var index: u32 = l.index;
+    while (l.getRune(index)) |val| {
+        if (mem.eql(u8, "#", val)) {
             index += 1;
         } else {
             break;
         }
     }
-    if (index > t.index) {
-        return t.emit(.AtxHeaderOpen, t.index, index);
+    if (index > l.index) {
+        return l.emit(.AtxHeader, l.index, index);
     }
     return null;
 }

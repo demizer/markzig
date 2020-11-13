@@ -1,8 +1,15 @@
 const std = @import("std");
 const time = @import("zig-time");
-const logger = @import("zig-log");
+pub const logger = @import("zig-log");
 
-pub var log = logger.Logger.new(std.io.getStdOut(), true);
+var log = logger.Logger.new(std.io.getStdOut(), true);
+
+pub fn config(level: logger.Level, dates: bool) void {
+    log.setLevel(level);
+    if (dates) {
+        log.set_date_handler(log_rfc3330_date_handler);
+    }
+}
 
 pub fn log_rfc3330_date_handler(
     l: *logger.Logger,
@@ -15,6 +22,36 @@ pub fn log_rfc3330_date_handler(
     l.file_stream.print("{} ", .{buf.items}) catch unreachable;
 }
 
-pub fn use_rfc3339_date_handler() void {
-    log.set_date_handler(log_rfc3330_date_handler);
+pub fn Debug(comptime str: []const u8) void {
+    log.Debug(str);
+}
+
+pub fn Debugf(comptime fmt: []const u8, args: anytype) void {
+    log.Debugf(fmt, args);
+}
+
+pub fn Info(comptime str: []const u8) void {
+    log.Info(str);
+}
+
+pub fn Infof(comptime fmt: []const u8, args: anytype) void {
+    log.Infof(fmt, args);
+}
+
+pub fn Error(comptime str: []const u8) void {
+    log.Error(str);
+}
+
+pub fn Errorf(comptime fmt: []const u8, args: anytype) void {
+    log.Errorf(fmt, args);
+}
+
+pub fn Fatal(comptime str: []const u8) void {
+    log.Fatal(str);
+    std.os.exit(1);
+}
+
+pub fn Fatalf(comptime fmt: []const u8, args: anytype) void {
+    log.Fatalf(fmt, args);
+    std.os.exit(1);
 }

@@ -1,0 +1,66 @@
+[
+    {
+        "ID": "Whitespace",
+        "startOffset": 0,
+        "endOffset": 2,
+        "string": "  \t",
+        "lineNumber": 1,
+        "column": 1
+    },
+    {
+        "ID": "Text",
+        "startOffset": 3,
+        "endOffset": 5,
+        "string": "foo",
+        "lineNumber": 1,
+        "column": 4
+    },
+    {
+        "ID": "Whitespace",
+        "startOffset": 6,
+        "endOffset": 6,
+        "string": "\t",
+        "lineNumber": 1,
+        "column": 7
+    },
+    {
+        "ID": "Text",
+        "startOffset": 7,
+        "endOffset": 9,
+        "string": "baz",
+        "lineNumber": 1,
+        "column": 8
+    },
+    {
+        "ID": "Whitespace",
+        "startOffset": 10,
+        "endOffset": 11,
+        "string": "\t\t",
+        "lineNumber": 1,
+        "column": 11
+    },
+    {
+        "ID": "Text",
+        "startOffset": 12,
+        "endOffset": 14,
+        "string": "bim",
+        "lineNumber": 1,
+        "column": 13
+    },
+    {
+        "ID": "Whitespace",
+        "startOffset": 15,
+        "endOffset": 15,
+        "string": "\n",
+        "lineNumber": 1,
+        "column": 16
+    },
+    {
+        "ID": "EOF",
+        "startOffset": 16,
+        "endOffset": 16,
+        "string": "",
+        "lineNumber": 1,
+        "column": 16
+    }
+]
