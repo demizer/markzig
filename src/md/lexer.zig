@@ -230,26 +230,10 @@ pub fn ruleWhitespace(t: *Lexer) !?Token {
     log.Debug("in ruleWhitespace");
     while (t.getRune(index)) |val| {
         if (t.isWhitespace(val)) {
-            // if (index > 0 and index != t.index) {
-            //     // log.Debug("here yo");
-            //     // log.Debugf("inside t.index: {} index: {}\n", .{ t.index, index });
-            //     // log.Debugf("char: {}, val: {}\n", .{ t.getRune(index - 1), val });
-            //     // if (index == t.index) {}
-            //     if (t.getRune(index - 1) != val) {
-            //         // log.Debug("here yo 2");
-            //         // different kind of space character, make separate tokens
-            //         // index += 1;
-            //         // t.index -= 1;
-            //         break;
-            //     }
-            // }
-            // log.Debugf("index: {}\n", .{index});
             index += 1;
             if (mem.eql(u8, "\n", val)) {
                 break;
             }
-            // log.Debugf("index: {}\n", .{index});
-            // FIXME: merging these to if statements results in compiler bug
         } else {
             log.Debugf("index: {}\n", .{index});
             break;
