@@ -75,7 +75,7 @@ const ValidationOutStream = struct {
 pub fn getTest(allocator: *mem.Allocator, number: i32, key: TestKey) ![]const u8 {
     const cwd = fs.cwd();
     // path is relative to test.zig in the project root
-    const source = try cwd.readFileAlloc(allocator, "test/expect/spec/commonmark_spec_0.29.json", math.maxInt(usize));
+    const source = try cwd.readFileAlloc(allocator, "test/spec/commonmark_spec_0.29.json", math.maxInt(usize));
     defer allocator.free(source);
     var json_parser = std.json.Parser.init(allocator, true);
     defer json_parser.deinit();
