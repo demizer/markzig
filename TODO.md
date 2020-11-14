@@ -24,6 +24,8 @@
 
 # Things To Do
 
+## Thu Nov 12 20:16 2020: add line number to log output
+
 ## Wed Nov 11 21:45 2020: INVESTIGATE: \n should be it's own token
 
    This might make it hard to detect newlines? I might be searching the string for \n to detect
@@ -37,6 +39,10 @@
 ## Mon Nov 09 20:54 2020: combine lexer, parser, and html tests into one test function.
 
    Do each in order to reduce time to run tests.
+
+## Thu Nov 12 18:05 2020: use zunicode library
+
+   https://github.com/kivikakk/zunicode
 
 ## Mon Nov 09 18:13 2020: use html-diff in a container if the diff streamer fails
 
@@ -56,9 +62,9 @@
 
 ## Mon Jun 01 11:30 2020: Parse lists
 
-## Mon Jun 01 15:54 2020: Add markzig to awesome-zig
-
 ## Mon Jun 01 11:31 2020: Announce on reddit
+
+## Thu Nov 12 17:29 2020: Extend with gfm https://github.github.com/gfm/
 
 # DONE THINGS
 

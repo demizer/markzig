@@ -6,7 +6,7 @@ const math = std.math;
 const json = std.json;
 const ChildProcess = std.ChildProcess;
 
-const log = @import("../src/md/log.zig");
+const log = @import("../src/md/logger.zig");
 const translate = @import("../src/md/translate.zig");
 const Node = @import("../src/md/parse.zig").Node;
 
@@ -233,7 +233,7 @@ pub fn compareHtmlExpect(allocator: *std.mem.Allocator, expected: []const u8, va
 }
 
 pub fn dumpTest(input: []const u8) void {
-    log.config(log.logger.Level.Debug, true);
+    // log.config(log.logger.Level.Debug, true);
     std.debug.warn("{}", .{"\n"});
     log.Debugf("test:\n{}-- END OF TEST --\n", .{input});
 }

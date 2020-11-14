@@ -5,7 +5,7 @@ const ArrayList = std.ArrayList;
 const json = std.json;
 const utf8 = @import("../unicode/unicode.zig");
 
-const log = @import("log.zig");
+const log = @import("logger.zig");
 const Token = @import("token.zig").Token;
 const TokenRule = @import("token.zig").TokenRule;
 const TokenId = @import("token.zig").TokenId;
