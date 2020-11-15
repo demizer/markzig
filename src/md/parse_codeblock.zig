@@ -1,6 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
-const log = @import("logger.zig");
+const log = @import("log.zig");
 const State = @import("ast.zig").State;
 const Parser = @import("parse.zig").Parser;
 const Node = @import("parse.zig").Node;

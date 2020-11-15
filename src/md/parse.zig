@@ -2,7 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const json = std.json;
 const Lexer = @import("lexer.zig").Lexer;
-const log = @import("logger.zig");
+const log = @import("log.zig");
 
 usingnamespace @import("parse_atx_heading.zig");
 usingnamespace @import("parse_codeblock.zig");

@@ -6,7 +6,7 @@ const assert = std.debug.assert;
 
 const testUtil = @import("util.zig");
 
-const log = @import("../src/md/logger.zig");
+const log = @import("../src/md/log.zig");
 const Token = @import("../src/md/token.zig").Token;
 const TokenId = @import("../src/md/token.zig").TokenId;
 const Lexer = @import("../src/md/lexer.zig").Lexer;
