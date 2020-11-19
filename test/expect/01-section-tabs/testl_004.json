@@ -1,0 +1,92 @@
+[
+    {
+        "ID": "Whitespace",
+        "index": 0,
+        "startOffset": 0,
+        "endOffset": 1,
+        "string": "  ",
+        "lineNumber": 1,
+        "column": 1
+    },
+    {
+        "ID": "BulletListMarker",
+        "index": 1,
+        "startOffset": 2,
+        "endOffset": 2,
+        "string": "-",
+        "lineNumber": 1,
+        "column": 3
+    },
+    {
+        "ID": "Whitespace",
+        "index": 2,
+        "startOffset": 3,
+        "endOffset": 3,
+        "string": " ",
+        "lineNumber": 1,
+        "column": 4
+    },
+    {
+        "ID": "Text",
+        "index": 3,
+        "startOffset": 4,
+        "endOffset": 6,
+        "string": "foo",
+        "lineNumber": 1,
+        "column": 5
+    },
+    {
+        "ID": "Newline",
+        "index": 4,
+        "startOffset": 7,
+        "endOffset": 7,
+        "string": "\n",
+        "lineNumber": 1,
+        "column": 8
+    },
+    {
+        "ID": "Newline",
+        "index": 5,
+        "startOffset": 8,
+        "endOffset": 8,
+        "string": "\n",
+        "lineNumber": 2,
+        "column": 1
+    },
+    {
+        "ID": "Whitespace",
+        "index": 6,
+        "startOffset": 9,
+        "endOffset": 9,
+        "string": "\t",
+        "lineNumber": 3,
+        "column": 1
+    },
+    {
+        "ID": "Text",
+        "index": 7,
+        "startOffset": 10,
+        "endOffset": 12,
+        "string": "bar",
+        "lineNumber": 3,
+        "column": 2
+    },
+    {
+        "ID": "Newline",
+        "index": 8,
+        "startOffset": 13,
+        "endOffset": 13,
+        "string": "\n",
+        "lineNumber": 3,
+        "column": 5
+    },
+    {
+        "ID": "EOF",
+        "index": 9,
+        "startOffset": 14,
+        "endOffset": 14,
+        "string": "",
+        "lineNumber": 3,
+        "column": 5
+    }
+]

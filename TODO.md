@@ -24,7 +24,21 @@
 
 # Things To Do
 
-## Thu Nov 12 20:16 2020: add line number to log output
+## Thu Nov 19 08:56 2020: document C++ dependency for webview
+
+## Thu Nov 19 08:53 2020: add lexer.debugPrintState() to print the lexer state
+
+## Thu Nov 19 08:44 2020: add parser.newPositionFromToken()
+
+## Thu Nov 19 08:08 2020: create colored logging functions
+
+## Tue Nov 17 12:53 2020: peeking at tokens should not result in the lexer "re-lexing" the same tokens.
+
+   Would need a token ring like go-rst.
+
+## Mon Nov 16 12:29 2020: rename "token_inline" to "lexer_inline.zig"
+
+## Mon Nov 16 08:39 2020: finish implementing test 04
 
 ## Wed Nov 11 21:45 2020: INVESTIGATE: \n should be it's own token
 
@@ -94,3 +108,7 @@
    The .string section should be escaped and enclosed with ''.
 
    Maybe there is a pretty print module for zig.
+
+## Thu Nov 12 20:16 2020: add line number to log output
+   :DONE: Sun Nov 15 15:47 2020
+

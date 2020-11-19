@@ -27,7 +27,7 @@ const ValidationOutStream = struct {
     expected_remaining: []const u8,
 
     pub const OutStream = std.io.OutStream(*Self, Error, write);
-    pub const Error = error{DifferentData};
+    pub const Error = error{ NoData, DifferentData };
 
     fn init(exp: []const u8) Self {
         return .{
@@ -40,6 +40,9 @@ const ValidationOutStream = struct {
     }
 
     fn write(self: *Self, bytes: []const u8) Error!usize {
+        if (bytes.len == 0) {
+            return error.NoData;
+        }
         if (self.expected_remaining.len < bytes.len) {
             std.debug.warn(
                 \\====== expected this output: =========
@@ -98,7 +101,7 @@ pub fn mktmp(allocator: *mem.Allocator) ![]const u8 {
     defer allocator.free(out.stdout);
     defer allocator.free(out.stderr);
     // defer allocator.free(out);
-    log.Debugf("mktemp return: {}\n", .{out});
+    // log.Debugf("mktemp return: {Z}\n", .{out});
     return allocator.dupe(u8, std.mem.trim(u8, out.stdout, &std.ascii.spaces));
 }
 
@@ -229,6 +232,7 @@ pub fn compareHtmlExpect(allocator: *std.mem.Allocator, expected: []const u8, va
     _ = vos.outStream().write(buf.items) catch |err| {
         return buf.items;
     };
+    if (buf.items.len != expected.len) return try allocator.dupe(u8, buf.items);
     return null;
 }
 

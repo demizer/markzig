@@ -6,18 +6,36 @@ const json = std.json;
 const utf8 = @import("../unicode/unicode.zig");
 
 const log = @import("log.zig");
+const ttyCode = log.logger.TTY.Code;
 const Token = @import("token.zig").Token;
-const TokenRule = @import("token.zig").TokenRule;
 const TokenId = @import("token.zig").TokenId;
 const atxRules = @import("token_atx_heading.zig");
 const inlineRules = @import("token_inline.zig");
+const listRules = @import("token_list.zig");
+
+const lexerRuleFn = fn (lexer: *Lexer) anyerror!?Token;
+
+const lexerRule = struct {
+    name: []const u8,
+    func: lexerRuleFn,
+
+    const Self = @This();
+
+    pub fn format(
+        writer: anytype,
+        comptime fmt: []const u8,
+        args: anytype,
+    ) !void {
+        writer.print("{}\n", .{Self});
+    }
+};
 
 pub const Lexer = struct {
     view: utf8.Utf8View,
     index: u32,
-    rules: ArrayList(TokenRule),
+    rules: ArrayList(lexerRule),
     tokens: ArrayList(Token),
-    tokenIndex: u64,
+    tokenIndex: usize,
     lineNumber: u32,
     allocator: *mem.Allocator,
 
@@ -27,15 +45,16 @@ pub const Lexer = struct {
             .view = try utf8.Utf8View.init(input),
             .index = 0,
             .allocator = allocator,
-            .rules = ArrayList(TokenRule).init(allocator),
+            .rules = ArrayList(lexerRule).init(allocator),
             .tokens = ArrayList(Token).init(allocator),
             .tokenIndex = 0,
             .lineNumber = 1,
         };
-        try t.registerRule(ruleWhitespace);
-        try t.registerRule(atxRules.ruleAtxHeader);
-        try t.registerRule(inlineRules.ruleInline);
-        try t.registerRule(ruleEOF);
+        try t.registerRule("ruleWhitespace", ruleWhitespace);
+        try t.registerRule("ruleList", listRules.ruleList);
+        try t.registerRule("ruleAtxHeader", atxRules.ruleAtxHeader);
+        try t.registerRule("ruleInline", inlineRules.ruleInline);
+        try t.registerRule("ruleEOF", ruleEOF);
         return t;
     }
 
@@ -44,14 +63,28 @@ pub const Lexer = struct {
         l.tokens.deinit();
     }
 
-    pub fn registerRule(l: *Lexer, rule: TokenRule) !void {
-        try l.rules.append(rule);
+    pub fn registerRule(l: *Lexer, name: []const u8, rule: lexerRuleFn) !void {
+        try l.rules.append(lexerRule{ .name = name, .func = rule });
+    }
+
+    /// Back the lexer up by one token
+    pub fn backup(l: *Lexer) void {
+        const offset = l.lastToken().?.startOffset - 1;
+        l.index = offset;
+        l.tokenIndex -= 1;
+    }
+
+    pub fn fastForward(l: *Lexer, tok: Token) void {
+        l.index = tok.endOffset + 1;
+        l.tokenIndex = tok.index;
     }
 
     /// Get the next token from the input.
     pub fn next(l: *Lexer) !?Token {
         for (l.rules.items) |rule| {
-            if (try rule(l)) |v| {
+            log.Debugf("next: trying rule: {}\n", .{rule.name});
+            if (try rule.func(l)) |v| {
+                log.Debugf("next: Returning token id: {} index: {} str: '{Z}' from rule: {}\n", .{ v.ID, v.index, v.string, rule.name });
                 return v;
             }
         }
@@ -60,12 +93,32 @@ pub const Lexer = struct {
 
     /// Peek at the next token.
     pub fn peekNext(l: *Lexer) !?Token {
+        log.Debugf("peekNext: peeking next token, current index: {}\n", .{l.tokenIndex});
         var indexBefore = l.index;
         var tokenIndexBefore = l.tokenIndex;
         var pNext = try l.next();
         l.index = indexBefore;
         l.tokenIndex = tokenIndexBefore;
+        log.Debugf("peekNext: tokenIndex set to {}\n", .{l.tokenIndex});
         return pNext;
+    }
+
+    /// Peek at the next token that isn't whitespace.
+    pub fn peekToNonWhitespace(l: *Lexer) !?Token {
+        var indexBefore = l.index;
+        var tokenIndexBefore = l.tokenIndex;
+        var tok: ?Token = null;
+        while (try l.next()) |ptok| {
+            if (ptok.ID == TokenId.EOF) break;
+            if (ptok.ID != TokenId.Whitespace and ptok.ID != TokenId.Newline) {
+                log.Debugf("peekToNonWhitespace non whitespace {}\n", .{ptok.ID});
+                tok = ptok;
+                break;
+            }
+        }
+        l.index = indexBefore;
+        l.tokenIndex = tokenIndexBefore;
+        return tok;
     }
 
     /// Gets a codepoint at index from the input. Returns null if index exceeds the length of the view.
@@ -85,35 +138,24 @@ pub const Lexer = struct {
                 .separator = true,
             },
         }, buf.outStream());
-        log.Debugf("{}: {}\n", .{ msg, buf.items });
+        log.Debugf("{}{}: {}{}\n", .{ ttyCode(.Magenta), msg, buf.items, ttyCode(.Reset) });
     }
 
     pub fn emit(l: *Lexer, tok: TokenId, startOffset: u32, endOffset: u32) !?Token {
-        // log.Debugf("start: {} end: {}\n", .{ start, end });
         var str = l.view.slice(startOffset, endOffset);
         // check for diacritic
-        log.Debugf("str: '{Z}'\n", .{str.bytes});
         var nEndOffset: u32 = endOffset - 1;
         if ((endOffset - startOffset) == 1 or nEndOffset < startOffset) {
             nEndOffset = startOffset;
-        }
-        // check if token already emitted
-        if (l.tokens.items.len > l.tokenIndex) {
-            // try l.debugPrintToken("lexer last token", l.tokens.items[l.tokens.items.len - 1]);
-            var lastTok = l.tokens.items[l.tokens.items.len - 1];
-            if (lastTok.ID == tok and lastTok.startOffset == startOffset and lastTok.endOffset == nEndOffset) {
-                log.Debug("Token already encountered");
-                l.tokenIndex = l.tokens.items.len - 1;
-                l.index = endOffset;
-                return lastTok;
-            }
         }
         var column: u32 = l.offsetToColumn(startOffset);
         if (tok == TokenId.EOF) {
             column = l.tokens.items[l.tokens.items.len - 1].column;
             l.lineNumber -= 1;
         }
+        // check if token already emitted
         var newTok = Token{
+            .index = l.tokens.items.len,
             .ID = tok,
             .startOffset = startOffset,
             .endOffset = nEndOffset,
@@ -121,10 +163,25 @@ pub const Lexer = struct {
             .lineNumber = l.lineNumber,
             .column = column,
         };
-        try l.debugPrintToken("lexer emit", &newTok);
+        if (l.checkDupeToken(newTok)) |dupeIndex| {
+            log.Debugf("{}FIXME Token already encountered: id: {} index: {} str: '{Z}' tokenIndex: {}{}\n", .{
+                ttyCode(.Red),
+                newTok.ID,
+                dupeIndex,
+                newTok.string,
+                l.tokenIndex,
+                ttyCode(.Reset),
+            });
+            var lastTok = if (l.lastTokenByIndex(dupeIndex)) |t| t else unreachable;
+            l.tokenIndex = lastTok.index;
+            l.index = lastTok.endOffset + 1;
+            return lastTok;
+            // }
+        }
         try l.tokens.append(newTok);
         l.index = endOffset;
         l.tokenIndex = l.tokens.items.len - 1;
+        try l.debugPrintToken("lexer emit", l.tokens.items[l.tokenIndex]);
         if (mem.eql(u8, str.bytes, "\n")) {
             l.lineNumber += 1;
         }
@@ -178,10 +235,21 @@ pub const Lexer = struct {
 
     /// Checks for all the whitespace characters. Returns true if the rune is a whitespace.
     pub fn isWhitespace(l: *Lexer, rune: []const u8) bool {
-        // A whitespace character is a space (U+0020), tab (U+0009), newline (U+000A), line tabulation (U+000B), form feed
-        // (U+000C), or carriage return (U+000D).
+        // A whitespace character is a space (U+0020), tab (U+0009), line tabulation (U+000B).
         const runes = &[_][]const u8{
-            "\u{0020}", "\u{0009}", "\u{000A}", "\u{000B}", "\u{000C}", "\u{000D}",
+            "\u{0020}", "\u{0009}", "\u{000B}",
+        };
+        for (runes) |itrune|
+            if (mem.eql(u8, itrune, rune))
+                return true;
+        return false;
+    }
+
+    /// Checks for a newline character
+    pub fn isNewline(l: *Lexer, rune: []const u8) bool {
+        // newline (U+000A), form feed (U+000C), or carriage return (U+000D)
+        const runes = &[_][]const u8{
+            "\u{000A}", "\u{000C}", "\u{000D}",
         };
         for (runes) |itrune|
             if (mem.eql(u8, itrune, rune))
@@ -207,39 +275,80 @@ pub const Lexer = struct {
 
     pub fn isLetter(l: *Lexer, rune: []const u8) bool {
         // TODO: make this more robust by using unicode character sets
-        if (!l.isPunctuation(rune) and !l.isWhitespace(rune)) {
+        if (!l.isPunctuation(rune) and !l.isWhitespace(rune) and !l.isNewline(rune)) {
+            log.Debugf("isLetter have rune: {Z}\n", .{rune});
             return true;
         }
         return false;
     }
 
     /// Get the last token emitted, exclude peek tokens
-    pub fn lastToken(l: *Lexer) Token {
+    pub fn lastToken(l: *Lexer) ?Token {
+        log.Debugf("lastToken l.tokens.items.len: {} tokenIndex: {}\n", .{ l.tokens.items.len, l.tokenIndex });
+        if (l.tokens.items.len == 0) {
+            return null;
+        }
         return l.tokens.items[l.tokenIndex];
+    }
+
+    /// Get last token by index
+    pub fn lastTokenByIndex(l: *Lexer, index: usize) ?Token {
+        if (index < 0 or index > l.tokens.items.len) {
+            return null;
+        }
+        log.Debugf("lastTokenByIndex index: {}\n", .{index});
+        return l.tokens.items[index];
+    }
+
+    /// FIXME: code smell
+    pub fn checkDupeToken(l: *Lexer, tok: Token) ?usize {
+        for (l.tokens.items) |item| {
+            if (item.ID == tok.ID and item.column == tok.column and item.startOffset == tok.startOffset and item.endOffset == tok.endOffset) {
+                return item.index;
+            }
+        }
+        return null;
+    }
+
+    /// Checks tok and tok2 to see if the columns are aligned converting tabs to spaces
+    pub fn checkAlignment(l: *Lexer, tok: Token, tok2: Token) bool {
+        const tokBeforePeek = if (l.lastTokenByIndex(tok2.index - 1)) |t| t else unreachable;
+        const hazTabBeforePeek = if (mem.indexOf(u8, tokBeforePeek.string, "\t") != null) true else false;
+
+        log.Debugf("checkAlignment: tokBeforePeek.index: {} string: {Z}\n", .{ tokBeforePeek.index, tokBeforePeek.string });
+        log.Debugf("checkAlignment: hazTabBeforePeek: {} tok.col: {} tok2.col: {}\n", .{ hazTabBeforePeek, tok.column, tok2.column });
+
+        if ((tok.column != tok2.column and !hazTabBeforePeek) or (hazTabBeforePeek and tok.column != tok2.column + 3)) {
+            log.Debug("checkAlignment: tokens do not align");
+            return false;
+        }
+        log.Debug("checkAlignment: tokens are in alignment!");
+        return true;
     }
 
     /// Skip the next token
     pub fn skipNext(l: *Lexer) !void {
-        _ = try l.next();
+        log.Debug("in skipNext");
+        if (try l.next()) |tok| {
+            log.Debugf("skipped token id: {} index: {} str: {}\n", .{ tok.ID, tok.index, tok.string });
+        }
     }
 };
 
 /// Get all the whitespace characters greedly.
 pub fn ruleWhitespace(t: *Lexer) !?Token {
     var index: u32 = t.index;
-    log.Debug("in ruleWhitespace");
     while (t.getRune(index)) |val| {
+        log.Debugf("ruleWhitespace val: {Z}\n", .{val});
         if (t.isWhitespace(val)) {
             index += 1;
-            if (mem.eql(u8, "\n", val)) {
-                break;
-            }
+        } else if (t.isNewline(val)) {
+            index += 1;
+            return t.emit(.Newline, t.index, index);
         } else {
-            log.Debugf("index: {}\n", .{index});
             break;
         }
     }
-    log.Debugf("t.index: {} index: {}\n", .{ t.index, index });
     if (index > t.index) {
         return t.emit(.Whitespace, t.index, index);
     }
@@ -254,7 +363,7 @@ pub fn ruleEOF(t: *Lexer) !?Token {
     return null;
 }
 
-test "lexer: peekNext " {
+test "lexer: peekNext" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const allocator = &arena.allocator;
@@ -276,7 +385,7 @@ test "lexer: peekNext " {
         assert(tok.ID == TokenId.Whitespace);
     }
     // The last token does not include peek'd tokens
-    assert(t.lastToken().ID == TokenId.AtxHeader);
+    assert(t.lastToken().?.ID == TokenId.AtxHeader);
 
     if (try t.next()) |tok| {
         assert(tok.ID == TokenId.Whitespace);

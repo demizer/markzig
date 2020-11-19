@@ -7,16 +7,20 @@ const Lexer = @import("lexer.zig").Lexer;
 const TokenIds = [_][]const u8{
     "Invalid",
     "Whitespace",
+    "Newline",
     "Text",
     "AtxHeader",
+    "BulletListMarker",
     "EOF",
 };
 
 pub const TokenId = enum {
     Invalid,
     Whitespace,
+    Newline,
     Text,
     AtxHeader,
+    BulletListMarker,
     EOF,
 
     pub fn string(self: TokenId) []const u8 {
@@ -37,6 +41,7 @@ pub const TokenId = enum {
 };
 
 pub const Token = struct {
+    index: usize,
     ID: TokenId,
     startOffset: u32,
     endOffset: u32,
@@ -104,5 +109,3 @@ pub const Token = struct {
         return;
     }
 };
-
-pub const TokenRule = fn (lexer: *Lexer) anyerror!?Token;

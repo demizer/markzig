@@ -1,6 +1,7 @@
 [
     {
         "ID": "Whitespace",
+        "index": 0,
         "startOffset": 0,
         "endOffset": 0,
         "string": "\t",
@@ -9,6 +10,7 @@
     },
     {
         "ID": "Text",
+        "index": 1,
         "startOffset": 1,
         "endOffset": 3,
         "string": "foo",
@@ -17,6 +19,7 @@
     },
     {
         "ID": "Whitespace",
+        "index": 2,
         "startOffset": 4,
         "endOffset": 4,
         "string": "\t",
@@ -25,6 +28,7 @@
     },
     {
         "ID": "Text",
+        "index": 3,
         "startOffset": 5,
         "endOffset": 7,
         "string": "baz",
@@ -33,6 +37,7 @@
     },
     {
         "ID": "Whitespace",
+        "index": 4,
         "startOffset": 8,
         "endOffset": 9,
         "string": "\t\t",
@@ -41,6 +46,7 @@
     },
     {
         "ID": "Text",
+        "index": 5,
         "startOffset": 10,
         "endOffset": 12,
         "string": "bim",
@@ -48,7 +54,8 @@
         "column": 11
     },
     {
-        "ID": "Whitespace",
+        "ID": "Newline",
+        "index": 6,
         "startOffset": 13,
         "endOffset": 13,
         "string": "\n",
@@ -57,6 +64,7 @@
     },
     {
         "ID": "EOF",
+        "index": 7,
         "startOffset": 14,
         "endOffset": 14,
         "string": "",

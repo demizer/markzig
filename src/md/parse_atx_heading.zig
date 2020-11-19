@@ -8,10 +8,11 @@ const TokenId = @import("token.zig").TokenId;
 const log = @import("log.zig");
 
 pub fn stateAtxHeader(p: *Parser) !void {
+    log.Debug("stateAtxHeader: START");
     p.state = Parser.State.AtxHeader;
     if (try p.lex.peekNext()) |tok| {
         if (tok.ID == TokenId.Whitespace and mem.eql(u8, tok.string, " ")) {
-            var openTok = p.lex.lastToken();
+            var openTok = if (p.lex.lastToken()) |lt| lt else return;
             var i: u32 = 0;
             var level: u32 = 0;
             while (i < openTok.string.len) : ({
@@ -37,8 +38,9 @@ pub fn stateAtxHeader(p: *Parser) !void {
             // skip the whitespace after the header opening
             try p.lex.skipNext();
             while (try p.lex.next()) |ntok| {
-                if (ntok.ID == TokenId.Whitespace and mem.eql(u8, ntok.string, "\n")) {
-                    log.Debug("Found a newline, exiting state");
+                try p.lex.debugPrintToken("stateAtxHeader: have token", ntok);
+                if (ntok.ID == TokenId.EOF or ntok.ID == TokenId.Newline and mem.eql(u8, ntok.string, "\n")) {
+                    log.Debug("stateAtxHeader: Found a newline or EOF, exiting state");
                     break;
                 }
                 var subChild = Node{
@@ -64,4 +66,5 @@ pub fn stateAtxHeader(p: *Parser) !void {
             p.state = Parser.State.Start;
         }
     }
+    log.Debug("stateAtxHeader: END");
 }

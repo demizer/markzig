@@ -3,9 +3,11 @@ const mem = std.mem;
 const json = std.json;
 const Lexer = @import("lexer.zig").Lexer;
 const log = @import("log.zig");
+const ttyCode = log.logger.TTY.Code;
 
 usingnamespace @import("parse_atx_heading.zig");
 usingnamespace @import("parse_codeblock.zig");
+usingnamespace @import("parse_list.zig");
 
 /// Function prototype for a State Transition in the Parser
 pub const StateTransition = fn (lexer: *Lexer) anyerror!?AstNode;
@@ -31,6 +33,8 @@ pub const Node = struct {
         AtxHeading,
         Text,
         CodeBlock,
+        BulletList,
+        ListItem,
         pub fn jsonStringify(
             value: ID,
             options: json.StringifyOptions,
@@ -140,8 +144,11 @@ pub const Node = struct {
                     _ = try out_stream.writeAll("[]");
                 } else {
                     _ = try out_stream.write("[");
-                    for (boop.items) |item| {
+                    for (boop.items) |item, i| {
                         try json.stringify(item, child_options, out_stream);
+                        if (i < boop.items.len - 1) {
+                            try out_stream.writeByte(',');
+                        }
                     }
                     _ = try out_stream.write("]");
                 }
@@ -184,6 +191,14 @@ pub const Node = struct {
                     }
                 }
             },
+            .BulletList => {
+                _ = try out_stream.writeAll("<ul>\n<li>\n");
+                for (value.Children.items[0].Children.items) |item| {
+                    _ = try out_stream.print("<p>{}</p>\n", .{item.Value});
+                }
+                _ = try out_stream.writeAll("</li>\n</ul>\n");
+            },
+            .ListItem => {},
             .Text => {},
         }
     }
@@ -235,12 +250,14 @@ pub const Parser = struct {
         self.lex = try Lexer.init(self.allocator, input);
         while (true) {
             if (try self.lex.next()) |tok| {
+                self.lex.tokenIndex = tok.index;
+                log.Debugf("{}parsing next token id: {} index: {} str: '{Z}' tokenIndex: {}{}\n", .{ ttyCode(.Cyan), tok.ID, tok.index, tok.string, self.lex.tokenIndex, ttyCode(.Reset) });
                 switch (tok.ID) {
-                    .Invalid => {},
-                    .Text => {},
+                    .BulletListMarker => {
+                        try stateBulletList(self);
+                    },
                     .Whitespace => {
                         try stateCodeBlock(self);
-                        // if (mem.eql(u8, tok.string, "\n")) {}
                     },
                     .AtxHeader => {
                         try stateAtxHeader(self);
@@ -249,6 +266,9 @@ pub const Parser = struct {
                         log.Debug("Found EOF");
                         break;
                     },
+                    .Newline => {},
+                    .Invalid => {},
+                    .Text => {},
                 }
             }
         }

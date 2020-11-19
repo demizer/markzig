@@ -9,11 +9,11 @@ const TokenId = @import("token.zig").TokenId;
 
 pub fn stateCodeBlock(p: *Parser) !void {
     if (try p.lex.peekNext()) |tok| {
-        var openTok = p.lex.lastToken();
-        // log.Debugf("parse block code before openTok: '{}' id: {} len: {}, tok: '{}' id: {} len: {}\n", .{
-        //     openTok.string, openTok.ID, openTok.string.len,
-        //     tok.string,     tok.ID,     tok.string.len,
-        // });
+        var openTok = if (p.lex.lastToken()) |lt| lt else return;
+        log.Debugf("parse block code before openTok: '{}' id: {} len: {}, tok: '{}' id: {} len: {}\n", .{
+            openTok.string, openTok.ID, openTok.string.len,
+            tok.string,     tok.ID,     tok.string.len,
+        });
         var hazCodeBlockWhitespace: bool = false;
         // var hazCodeBlockWhitespaceNextToken: bool = false;
         if (openTok.ID == TokenId.Whitespace and openTok.string.len >= 1) {
@@ -90,4 +90,5 @@ pub fn stateCodeBlock(p: *Parser) !void {
             p.state = Parser.State.Start;
         }
     }
+    log.Debug("stateCodeBlock exit");
 }
