@@ -30,6 +30,8 @@
 
    Might need to roll a custom runner(s)
 
+## Sat Nov 21 11:36 2020: Fix macOS and Windows support
+
 ## Mon Nov 09 21:26 2020: update outStream to writer in all files
 
 ## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
