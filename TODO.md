@@ -24,8 +24,6 @@
 
 # Things To Do
 
-## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
-
 ## Thu Nov 12 18:05 2020: use zunicode library
 
    https://github.com/kivikakk/zunicode
@@ -41,6 +39,9 @@
 ## Thu Nov 12 17:29 2020: Extend with gfm https://github.github.com/gfm/
 
 # DONE THINGS
+
+## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
+   :DONE: Sat Nov 21 13:11 2020
 
 ## Mon Nov 09 21:26 2020: update outStream to writer in all files
    :DONE: Sat Nov 21 12:06 2020
