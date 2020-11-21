@@ -13,4 +13,6 @@ NOTE: the webview does not currently compile due to https://github.com/ziglang/z
 
 ## Usage
 
-Not yet applicable.
+```
+zig build && ./zig-cache/bin/mdv --debug view test/docs/test_headings.md
+```
