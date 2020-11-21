@@ -24,53 +24,17 @@
 
 # Things To Do
 
-## Thu Nov 19 08:56 2020: document C++ dependency for webview
-
-## Thu Nov 19 08:53 2020: add lexer.debugPrintState() to print the lexer state
-
-## Thu Nov 19 08:44 2020: add parser.newPositionFromToken()
-
-## Thu Nov 19 08:08 2020: create colored logging functions
-
-## Tue Nov 17 12:53 2020: peeking at tokens should not result in the lexer "re-lexing" the same tokens.
-
-   Would need a token ring like go-rst.
-
 ## Mon Nov 16 12:29 2020: rename "token_inline" to "lexer_inline.zig"
 
-## Mon Nov 16 08:39 2020: finish implementing test 04
-
-## Wed Nov 11 21:45 2020: INVESTIGATE: \n should be it's own token
-
-   This might make it hard to detect newlines? I might be searching the string for \n to detect
-   newlines.
-
-   const input = "foo\nbar \t\nbaz";
-   1605159814 [DEBUG]: lexer emit: { "ID": "Whitespace", "startOffset": 7, "endOffset": 9, "string": " \t\n", "lineNumber": 2, "column": 4 }
-
-## Tue Nov 10 15:01 2020: add line number to log output
-
-## Mon Nov 09 20:54 2020: combine lexer, parser, and html tests into one test function.
-
-   Do each in order to reduce time to run tests.
-
-## Thu Nov 12 18:05 2020: use zunicode library
-
-   https://github.com/kivikakk/zunicode
-
-## Mon Nov 09 18:13 2020: use html-diff in a container if the diff streamer fails
-
-   https://github.com/bem/html-differ
-
-## Mon Nov 09 21:57 2020: fix date/time logging in md/log.zig
+## Fri Nov 20 22:29 2020: add zig workflow to github to run tests
 
 ## Mon Nov 09 21:26 2020: update outStream to writer in all files
 
 ## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
 
-## Mon Nov 09 20:45 2020: fix linting errors is md/log.zig
+## Thu Nov 12 18:05 2020: use zunicode library
 
-### Sat Jun 06 13:47 2020: move test convert html 32 to parse test 32 test func
+   https://github.com/kivikakk/zunicode
 
 ## Mon Jun 01 11:30 2020: Parse inline blocks
 
@@ -81,6 +45,30 @@
 ## Thu Nov 12 17:29 2020: Extend with gfm https://github.github.com/gfm/
 
 # DONE THINGS
+
+## Mon Nov 09 21:57 2020: fix date/time logging in md/log.zig
+   :DONE: Fri Nov 20 22:36 2020
+
+## Sat Jun 06 13:47 2020: move test convert html 32 to parse test 32 test func
+   :DONE: Fri Nov 20 22:37 2020
+
+## Thu Nov 19 08:56 2020: document C++ dependency for webview
+   :DONE: Fri Nov 20 22:34 2020
+
+## Mon Nov 16 08:39 2020: finish implementing test 04
+   :DONE: Fri Nov 20 22:34 2020
+
+## Wed Nov 11 21:45 2020: INVESTIGATE: \n should be it's own token
+   :DONE: Fri Nov 20 22:34 2020
+
+## Tue Nov 10 15:01 2020: add line number to log output
+   :DONE: Fri Nov 20 22:34 2020
+
+## Mon Nov 09 20:54 2020: combine lexer, parser, and html tests into one test function.
+   :DONE: Fri Nov 20 22:35 2020
+
+## Tue Nov 17 12:53 2020: peeking at tokens should not result in the lexer "re-lexing" the same tokens.
+   :DONE: Fri Nov 20 22:24 2020
 
 ## Sat Jun 06 13:39 2020: Remove the json / html comparitor
    :DONE: Mon Nov 09 20:38 2020

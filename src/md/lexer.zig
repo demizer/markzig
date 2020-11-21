@@ -81,6 +81,20 @@ pub const Lexer = struct {
 
     /// Get the next token from the input.
     pub fn next(l: *Lexer) !?Token {
+        log.Debugf("{}next: lexer pos: l.index: {} viewlen: {} l.tokenIndex: {} tokens.len: {}{}\n", .{ ttyCode(.Green), l.index, l.view.len, l.tokenIndex, l.tokens.items.len, ttyCode(.Reset) });
+        if (l.tokens.items.len > 0 and l.tokenIndex < l.tokens.items.len - 1) {
+            l.tokenIndex += 1;
+            const lastTok = if (l.lastToken()) |tok| tok else return null;
+            l.index = lastTok.endOffset + 1;
+            log.Debugf("{}next: returning token from buffer: l.index: {} l.tokenIndex: {}{}\n", .{ ttyCode(.Green), l.index, l.tokenIndex, ttyCode(.Reset) });
+            return lastTok;
+        } else if (l.tokens.items.len > 0 and l.index == l.view.len) {
+            if (l.lastToken()) |tok| {
+                if (tok.ID == TokenId.EOF) {
+                    return tok;
+                }
+            }
+        }
         for (l.rules.items) |rule| {
             log.Debugf("next: trying rule: {}\n", .{rule.name});
             if (try rule.func(l)) |v| {
@@ -163,21 +177,6 @@ pub const Lexer = struct {
             .lineNumber = l.lineNumber,
             .column = column,
         };
-        if (l.checkDupeToken(newTok)) |dupeIndex| {
-            log.Debugf("{}FIXME Token already encountered: id: {} index: {} str: '{Z}' tokenIndex: {}{}\n", .{
-                ttyCode(.Red),
-                newTok.ID,
-                dupeIndex,
-                newTok.string,
-                l.tokenIndex,
-                ttyCode(.Reset),
-            });
-            var lastTok = if (l.lastTokenByIndex(dupeIndex)) |t| t else unreachable;
-            l.tokenIndex = lastTok.index;
-            l.index = lastTok.endOffset + 1;
-            return lastTok;
-            // }
-        }
         try l.tokens.append(newTok);
         l.index = endOffset;
         l.tokenIndex = l.tokens.items.len - 1;
@@ -390,6 +389,43 @@ test "lexer: peekNext" {
     if (try t.next()) |tok| {
         assert(tok.ID == TokenId.Whitespace);
     }
+}
+
+test "lexer: next after peek accross lines" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const allocator = &arena.allocator;
+
+    const input = "# foo\n# bar\n# baz\n";
+    log.Debugf("input:\n{}-- END OF TEST --\n", .{input});
+
+    var t = try Lexer.init(allocator, input);
+
+    if (try t.next()) |tok| {
+        assert(tok.ID == TokenId.AtxHeader);
+    }
+
+    if (try t.peekNext()) |tok| {
+        assert(tok.ID == TokenId.Whitespace);
+    }
+    if (try t.peekNext()) |tok| {
+        assert(tok.ID == TokenId.Whitespace);
+    }
+
+    assert(t.lastToken().?.ID == TokenId.AtxHeader);
+
+    _ = try t.next();
+    _ = try t.next();
+
+    if (try t.next()) |tok| {
+        log.Debugf("tok: {}\n", .{tok});
+        assert(tok.ID == TokenId.Newline);
+    }
+
+    _ = try t.peekNext();
+    _ = try t.peekNext();
+
+    assert(t.lastToken().?.ID == TokenId.Newline);
 }
 
 test "lexer: offsetToColumn" {
