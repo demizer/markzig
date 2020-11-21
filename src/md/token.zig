@@ -34,9 +34,9 @@ pub const TokenId = enum {
     pub fn jsonStringify(
         self: @This(),
         options: json.StringifyOptions,
-        out_stream: anytype,
+        writer: anytype,
     ) !void {
-        try json.stringify(self.string(), options, out_stream);
+        try json.stringify(self.string(), options, writer);
     }
 };
 
@@ -52,9 +52,9 @@ pub const Token = struct {
     pub fn jsonStringify(
         value: @This(),
         options: json.StringifyOptions,
-        out_stream: anytype,
+        writer: anytype,
     ) !void {
-        try out_stream.writeByte('{');
+        try writer.writeByte('{');
         const T = @TypeOf(value);
         const S = @typeInfo(T).Struct;
         comptime var field_output = false;
@@ -68,44 +68,44 @@ pub const Token = struct {
             if (!field_output) {
                 field_output = true;
             } else {
-                try out_stream.writeByte(',');
+                try writer.writeByte(',');
             }
             if (child_options.whitespace) |child_whitespace| {
                 // FIXME: all this to remove this line...
-                // try out_stream.writeByte('\n');
-                try child_whitespace.outputIndent(out_stream);
+                // try writer.writeByte('\n');
+                try child_whitespace.outputIndent(writer);
             }
-            try json.stringify(Field.name, options, out_stream);
-            try out_stream.writeByte(':');
+            try json.stringify(Field.name, options, writer);
+            try writer.writeByte(':');
             if (child_options.whitespace) |child_whitespace| {
                 if (child_whitespace.separator) {
-                    try out_stream.writeByte(' ');
+                    try writer.writeByte(' ');
                 }
             }
             if (comptime !mem.eql(u8, Field.name, "Children")) {
-                try json.stringify(@field(value, Field.name), child_options, out_stream);
+                try json.stringify(@field(value, Field.name), child_options, writer);
             } else {
                 var boop = @field(value, Field.name);
                 if (boop.items.len == 0) {
-                    _ = try out_stream.writeAll("[]");
+                    _ = try writer.writeAll("[]");
                 } else {
-                    _ = try out_stream.write("[");
+                    _ = try writer.write("[");
                     for (boop.items) |item| {
-                        try json.stringify(item, child_options, out_stream);
+                        try json.stringify(item, child_options, writer);
                     }
-                    _ = try out_stream.write("]");
+                    _ = try writer.write("]");
                 }
             }
         }
         if (field_output) {
             if (options.whitespace) |whitespace| {
                 // FIXME: all this to remove this line...
-                // try out_stream.writeByte('\n');
-                try whitespace.outputIndent(out_stream);
+                // try writer.writeByte('\n');
+                try whitespace.outputIndent(writer);
             }
         }
-        try out_stream.writeByte(' ');
-        try out_stream.writeByte('}');
+        try writer.writeByte(' ');
+        try writer.writeByte('}');
         return;
     }
 };

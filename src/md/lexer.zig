@@ -151,7 +151,7 @@ pub const Lexer = struct {
                 .indent = .{ .Space = 1 },
                 .separator = true,
             },
-        }, buf.outStream());
+        }, buf.writer());
         log.Debugf("{}{}: {}{}\n", .{ ttyCode(.Magenta), msg, buf.items, ttyCode(.Reset) });
     }
 

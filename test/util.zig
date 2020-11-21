@@ -26,7 +26,7 @@ const ValidationOutStream = struct {
 
     expected_remaining: []const u8,
 
-    pub const OutStream = std.io.OutStream(*Self, Error, write);
+    pub const Writer = std.io.Writer(*Self, Error, write);
     pub const Error = error{ NoData, DifferentData };
 
     fn init(exp: []const u8) Self {
@@ -35,7 +35,7 @@ const ValidationOutStream = struct {
         };
     }
 
-    pub fn outStream(self: *Self) OutStream {
+    pub fn writer(self: *Self) Writer {
         return .{ .context = self };
     }
 
@@ -84,7 +84,7 @@ pub fn getTest(allocator: *mem.Allocator, number: i32, key: TestKey) ![]const u8
     defer json_parser.deinit();
     var json_tree = try json_parser.parse(source);
     defer json_tree.deinit();
-    const stdout = &std.io.getStdOut().outStream();
+    const stdout = &std.io.getStdOut().writer();
     for (json_tree.root.Array.items) |value, i| {
         var example_num = value.Object.get("example").?.Integer;
         if (example_num == number) {
@@ -122,7 +122,7 @@ pub fn writeJson(allocator: *mem.Allocator, tempDir: []const u8, name: []const u
             .indent = .{ .Space = 4 },
             .separator = true,
         },
-    }, buf.outStream());
+    }, buf.writer());
     return writeFile(allocator, tempDir, name, buf.items);
 }
 
@@ -214,7 +214,7 @@ pub fn compareJsonExpect(allocator: *mem.Allocator, expected: []const u8, value:
 
     // FIXME: replace with zig json diff
     dockerRunJsonDiff(allocator, actualJsonPath, expectJsonPath) catch |err2| {
-        try json.stringify(value, stringyOpts, dumpBuf.outStream());
+        try json.stringify(value, stringyOpts, dumpBuf.writer());
         return dumpBuf.toOwnedSlice();
     };
     return null;
@@ -228,8 +228,8 @@ pub fn compareHtmlExpect(allocator: *std.mem.Allocator, expected: []const u8, va
     var vos = ValidationOutStream.init(expected);
     var buf = std.ArrayList(u8).init(allocator);
     defer buf.deinit();
-    try translate.markdownToHtml(value, buf.outStream());
-    _ = vos.outStream().write(buf.items) catch |err| {
+    try translate.markdownToHtml(value, buf.writer());
+    _ = vos.writer().write(buf.items) catch |err| {
         return buf.items;
     };
     if (buf.items.len != expected.len) return try allocator.dupe(u8, buf.items);

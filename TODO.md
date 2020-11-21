@@ -24,16 +24,6 @@
 
 # Things To Do
 
-## Fri Nov 20 22:29 2020: add zig workflow to github to run tests
-
-## Sat Nov 21 11:18 2020: fix docker json-diff test on github actions
-
-   Might need to roll a custom runner(s)
-
-## Sat Nov 21 11:36 2020: Fix macOS and Windows support
-
-## Mon Nov 09 21:26 2020: update outStream to writer in all files
-
 ## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
 
 ## Thu Nov 12 18:05 2020: use zunicode library
@@ -44,11 +34,19 @@
 
 ## Mon Jun 01 11:30 2020: Parse lists
 
+## Sat Nov 21 11:36 2020: Fix macOS and Windows support
+
 ## Mon Jun 01 11:31 2020: Announce on reddit
 
 ## Thu Nov 12 17:29 2020: Extend with gfm https://github.github.com/gfm/
 
 # DONE THINGS
+
+## Mon Nov 09 21:26 2020: update outStream to writer in all files
+   :DONE: Sat Nov 21 12:06 2020
+
+## Fri Nov 20 22:29 2020: add zig workflow to github to run tests
+   :DONE: Sat Nov 21 11:50 2020
 
 ## Mon Nov 16 12:29 2020: rename "token_inline" to "lexer_inline.zig"
    :DONE: Fri Nov 20 22:49 2020

@@ -105,7 +105,7 @@ pub fn main() anyerror!void {
         \\ };
     ;
 
-    try std.fmt.format(html.outStream(),
+    try std.fmt.format(html.writer(),
         \\ data:text/html,
         \\ <!doctype html>
         \\ <html>

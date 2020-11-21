@@ -38,9 +38,9 @@ pub const Node = struct {
         pub fn jsonStringify(
             value: ID,
             options: json.StringifyOptions,
-            out_stream: anytype,
+            writer: anytype,
         ) !void {
-            try json.stringify(@tagName(value), options, out_stream);
+            try json.stringify(@tagName(value), options, writer);
         }
     };
 
@@ -60,8 +60,8 @@ pub const Node = struct {
 
             pub fn outputIndent(
                 whitespace: @This(),
-                out_stream: anytype,
-            ) @TypeOf(out_stream).Error!void {
+                writer: anytype,
+            ) @TypeOf(writer).Error!void {
                 var char: u8 = undefined;
                 var n_chars: usize = undefined;
                 switch (whitespace.indent) {
@@ -75,7 +75,7 @@ pub const Node = struct {
                     },
                 }
                 n_chars *= whitespace.indent_level;
-                try out_stream.writeByteNTimes(char, n_chars);
+                try writer.writeByteNTimes(char, n_chars);
             }
         };
 
@@ -107,9 +107,9 @@ pub const Node = struct {
     pub fn jsonStringify(
         value: @This(),
         options: json.StringifyOptions,
-        out_stream: anytype,
+        writer: anytype,
     ) !void {
-        try out_stream.writeByte('{');
+        try writer.writeByte('{');
         const T = @TypeOf(value);
         const S = @typeInfo(T).Struct;
         comptime var field_output = false;
@@ -123,80 +123,80 @@ pub const Node = struct {
             if (!field_output) {
                 field_output = true;
             } else {
-                try out_stream.writeByte(',');
+                try writer.writeByte(',');
             }
             if (child_options.whitespace) |child_whitespace| {
-                try out_stream.writeByte('\n');
-                try child_whitespace.outputIndent(out_stream);
+                try writer.writeByte('\n');
+                try child_whitespace.outputIndent(writer);
             }
-            try json.stringify(Field.name, options, out_stream);
-            try out_stream.writeByte(':');
+            try json.stringify(Field.name, options, writer);
+            try writer.writeByte(':');
             if (child_options.whitespace) |child_whitespace| {
                 if (child_whitespace.separator) {
-                    try out_stream.writeByte(' ');
+                    try writer.writeByte(' ');
                 }
             }
             if (comptime !mem.eql(u8, Field.name, "Children")) {
-                try json.stringify(@field(value, Field.name), child_options, out_stream);
+                try json.stringify(@field(value, Field.name), child_options, writer);
             } else {
                 var boop = @field(value, Field.name);
                 if (boop.items.len == 0) {
-                    _ = try out_stream.writeAll("[]");
+                    _ = try writer.writeAll("[]");
                 } else {
-                    _ = try out_stream.write("[");
+                    _ = try writer.write("[");
                     for (boop.items) |item, i| {
-                        try json.stringify(item, child_options, out_stream);
+                        try json.stringify(item, child_options, writer);
                         if (i < boop.items.len - 1) {
-                            try out_stream.writeByte(',');
+                            try writer.writeByte(',');
                         }
                     }
-                    _ = try out_stream.write("]");
+                    _ = try writer.write("]");
                 }
             }
         }
         if (field_output) {
             if (options.whitespace) |whitespace| {
-                try out_stream.writeByte('\n');
-                try whitespace.outputIndent(out_stream);
+                try writer.writeByte('\n');
+                try whitespace.outputIndent(writer);
             }
         }
-        try out_stream.writeByte('}');
+        try writer.writeByte('}');
         return;
     }
 
     pub fn htmlStringify(
         value: @This(),
         options: StringifyOptions,
-        out_stream: anytype,
+        writer: anytype,
     ) !void {
         var child_options = options;
         switch (value.ID) {
             .AtxHeading => {
                 var lvl = value.Level;
                 var text = value.Children.items[0].Value;
-                _ = try out_stream.print("<h{}>{}</h{}>", .{ lvl, text, lvl });
+                _ = try writer.print("<h{}>{}</h{}>", .{ lvl, text, lvl });
                 if (child_options.whitespace) |child_whitespace| {
                     if (child_whitespace.separator) {
-                        try out_stream.writeByte('\n');
+                        try writer.writeByte('\n');
                     }
                 }
             },
             .CodeBlock => {
                 var lvl = value.Level;
                 var text = value.Children.items[0].Value;
-                _ = try out_stream.print("<pre><code>{}</code></pre>", .{text});
+                _ = try writer.print("<pre><code>{}</code></pre>", .{text});
                 if (child_options.whitespace) |child_whitespace| {
                     if (child_whitespace.separator) {
-                        try out_stream.writeByte('\n');
+                        try writer.writeByte('\n');
                     }
                 }
             },
             .BulletList => {
-                _ = try out_stream.writeAll("<ul>\n<li>\n");
+                _ = try writer.writeAll("<ul>\n<li>\n");
                 for (value.Children.items[0].Children.items) |item| {
-                    _ = try out_stream.print("<p>{}</p>\n", .{item.Value});
+                    _ = try writer.print("<p>{}</p>\n", .{item.Value});
                 }
-                _ = try out_stream.writeAll("</li>\n</ul>\n");
+                _ = try writer.writeAll("</li>\n</ul>\n");
             },
             .ListItem => {},
             .Text => {},
