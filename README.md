@@ -14,20 +14,3 @@ NOTE: the webview does not currently compile due to https://github.com/ziglang/z
 ## Usage
 
 Not yet applicable.
-
-## Status
-
-5/649 tests of the CommonMark 0.29 test suite pass!
-
-### Milestone #1
-
-Parse and display a basic document [test.md](https://github.com/demizer/markzig/blob/master/test/test.md).
-
-- [ ] Tokenize
-- [ ] Parse
-- [ ] Render to HTML
-- [X] Display markdown document in [webview](https://github.com/zserge/webview).
-
-### Milestone #2
-
-- [ ] 50% tests pass
