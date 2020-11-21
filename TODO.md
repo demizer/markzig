@@ -24,8 +24,6 @@
 
 # Things To Do
 
-## Mon Nov 16 12:29 2020: rename "token_inline" to "lexer_inline.zig"
-
 ## Fri Nov 20 22:29 2020: add zig workflow to github to run tests
 
 ## Mon Nov 09 21:26 2020: update outStream to writer in all files
@@ -45,6 +43,9 @@
 ## Thu Nov 12 17:29 2020: Extend with gfm https://github.github.com/gfm/
 
 # DONE THINGS
+
+## Mon Nov 16 12:29 2020: rename "token_inline" to "lexer_inline.zig"
+   :DONE: Fri Nov 20 22:49 2020
 
 ## Mon Nov 09 21:57 2020: fix date/time logging in md/log.zig
    :DONE: Fri Nov 20 22:36 2020

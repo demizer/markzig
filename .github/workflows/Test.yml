@@ -1,0 +1,51 @@
+name: Test
+
+# copied from https://github.com/kivikakk/koino/blob/main/.github/workflows/zig.yml
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+      # - run: zig build
+      # - run: zig build test
+      - run: zig test test.zig
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+      # - run: brew install pkg-config pcre
+      # - run: zig build
+      # - run: zig build test
+      - run: zig test test.zig
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+      # - run: c:; cd \vcpkg; git pull; .\bootstrap-vcpkg.bat
+      # - run: vcpkg integrate install
+      # - run: vcpkg install pcre --triplet x64-windows-static
+      # - run: zig build
+      # - run: zig build test
+      - run: zig test test.zig
