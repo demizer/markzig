@@ -9,9 +9,9 @@ const log = @import("log.zig");
 const ttyCode = log.logger.TTY.Code;
 const Token = @import("token.zig").Token;
 const TokenId = @import("token.zig").TokenId;
-const atxRules = @import("token_atx_heading.zig");
-const inlineRules = @import("token_inline.zig");
-const listRules = @import("token_list.zig");
+const atxRules = @import("lexer_atx_heading.zig");
+const inlineRules = @import("lexer_inline.zig");
+const listRules = @import("lexer_list.zig");
 
 const lexerRuleFn = fn (lexer: *Lexer) anyerror!?Token;
 
