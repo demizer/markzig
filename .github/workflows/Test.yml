@@ -20,7 +20,8 @@ jobs:
           version: master
       # - run: zig build
       # - run: zig build test
-      - run: zig test test.zig
+      # WORKAROUND until zig package management is fixed
+      - run: zig test test.zig --pkg-begin zig-time /home/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /home/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
   test-macos:
     runs-on: macos-latest
     steps:
@@ -33,7 +34,8 @@ jobs:
       # - run: brew install pkg-config pcre
       # - run: zig build
       # - run: zig build test
-      - run: zig test test.zig
+      # WORKAROUND until zig package management is fixed
+      - run: zig test test.zig --pkg-begin zig-time /home/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /home/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
   test-windows:
     runs-on: windows-latest
     steps:
@@ -48,4 +50,5 @@ jobs:
       # - run: vcpkg install pcre --triplet x64-windows-static
       # - run: zig build
       # - run: zig build test
-      - run: zig test test.zig
+      # WORKAROUND until zig package management is fixed
+      - run: zig test test.zig --pkg-begin zig-time /home/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /home/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
