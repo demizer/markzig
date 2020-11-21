@@ -35,7 +35,7 @@ jobs:
       # - run: zig build
       # - run: zig build test
       # WORKAROUND until zig package management is fixed
-      - run: zig test test.zig --pkg-begin zig-time /home/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /home/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
+      - run: zig test test.zig --pkg-begin zig-time /Users/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /Users/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
   test-windows:
     runs-on: windows-latest
     steps:
@@ -51,4 +51,4 @@ jobs:
       # - run: zig build
       # - run: zig build test
       # WORKAROUND until zig package management is fixed
-      - run: zig test test.zig --pkg-begin zig-time /home/runner/work/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /home/runner/work/markzig/markzig/lib/log.zig/src/index.zig --pkg-end
+      - run: zig test test.zig --pkg-begin zig-time D:/a/markzig/markzig/lib/zig-time/src/time.zig --pkg-end --pkg-begin zig-log /D:/a/markzig/markzig/lib/log.zig/src/index.zig --pkg-end

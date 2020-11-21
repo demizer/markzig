@@ -26,6 +26,10 @@
 
 ## Fri Nov 20 22:29 2020: add zig workflow to github to run tests
 
+## Sat Nov 21 11:18 2020: fix docker json-diff test on github actions
+
+   Might need to roll a custom runner(s)
+
 ## Mon Nov 09 21:26 2020: update outStream to writer in all files
 
 ## Mon Nov 09 21:56 2020: use testing.TmpDir instead of mktemp command
