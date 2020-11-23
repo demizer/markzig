@@ -24,9 +24,28 @@
 
 # Things To Do
 
-## Thu Nov 12 18:05 2020: use zunicode library
+## Sun Nov 22 19:02 2020: json lint all test expect files
 
-   https://github.com/kivikakk/zunicode
+   add this as a test in github action.
+
+## Sun Nov 22 18:07 2020: backup should return a token
+
+   Would cleanup parse_codeblock.zig line 72
+
+## Sun Nov 22 18:02 2020: turn "return null;" into errors
+
+## Sun Nov 22 17:35 2020: defer debug print of END
+
+   on all lexer and parser functions that do work
+
+## Sun Nov 22 17:13 2020: remove really long debug lines
+
+   Create special lexer/parser diagnostic printing functions to replace these.
+
+   kind of already have this with lexer.debugPrintToken but needs to have less "noisy" output by not
+   printing zig object characters: "{} and \" and :"
+
+## Sat Nov 21 21:49 2020: move Node from parse.zig into node.zig
 
 ## Mon Jun 01 11:30 2020: Parse inline blocks
 

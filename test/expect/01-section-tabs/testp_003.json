@@ -1,33 +1,31 @@
-[
-    {
-        "ID": "CodeBlock",
-        "Value": "    ",
-        "PositionStart": {
-            "Line": 1,
-            "Column": 1,
-            "Offset": 0
-        },
-        "PositionEnd": {
-            "Line": 2,
-            "Column": 8,
-            "Offset": 15
-        },
-        "Children": [{
-            "ID": "Text",
-            "Value": "a\ta\nὐ\ta\n",
-            "PositionStart": {
-                "Line": 1,
-                "Column": 5,
-                "Offset": 4
-            },
-            "PositionEnd": {
-                "Line": 2,
-                "Column": 8,
-                "Offset": 15
-            },
-            "Children": [],
-            "Level": 0
-        }],
-        "Level": 0
-    }
-]
+[{
+	"ID": "CodeBlock",
+	"Value": null,
+	"PositionStart": {
+		"Line": 1,
+		"Column": 1,
+		"Offset": 0
+	},
+	"PositionEnd": {
+		"Line": 2,
+		"Column": 7,
+		"Offset": 14
+	},
+	"Children": [{
+		"ID": "Text",
+		"Value": "a\ta\nὐ\ta",
+		"PositionStart": {
+			"Line": 1,
+			"Column": 5,
+			"Offset": 4
+		},
+		"PositionEnd": {
+			"Line": 2,
+			"Column": 7,
+			"Offset": 14
+		},
+		"Children": [],
+		"Level": 0
+	}],
+	"Level": 0
+}]

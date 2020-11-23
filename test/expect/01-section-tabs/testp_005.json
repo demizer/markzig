@@ -1,0 +1,76 @@
+[{
+	"ID": "BulletList",
+	"Value": "-",
+	"PositionStart": {
+		"Line": 1,
+		"Column": 1,
+		"Offset": 0
+	},
+	"PositionEnd": {
+		"Line": 3,
+		"Column": 5,
+		"Offset": 11
+	},
+	"Children": [{
+		"ID": "ListItem",
+		"Value": null,
+		"PositionStart": {
+			"Line": 1,
+			"Column": 3,
+			"Offset": 2
+		},
+		"PositionEnd": {
+			"Line": 3,
+			"Column": 5,
+			"Offset": 11
+		},
+		"Children": [{
+			"ID": "Text",
+			"Value": "foo",
+			"PositionStart": {
+				"Line": 1,
+				"Column": 3,
+				"Offset": 2
+			},
+			"PositionEnd": {
+				"Line": 1,
+				"Column": 5,
+				"Offset": 4
+			},
+			"Children": [],
+			"Level": 0
+		}, {
+			"ID": "CodeBlock",
+			"Value": null,
+			"PositionStart": {
+				"Line": 3,
+				"Column": 1,
+				"Offset": 7
+			},
+			"PositionEnd": {
+				"Line": 3,
+				"Column": 5,
+				"Offset": 11
+			},
+			"Children": [{
+				"ID": "Text",
+				"Value": "  bar",
+				"PositionStart": {
+					"Line": 3,
+					"Column": 3,
+					"Offset": 9
+				},
+				"PositionEnd": {
+					"Line": 3,
+					"Column": 5,
+					"Offset": 11
+				},
+				"Children": [],
+				"Level": 0
+			}],
+			"Level": 0
+		}],
+		"Level": 0
+	}],
+	"Level": 0
+}]

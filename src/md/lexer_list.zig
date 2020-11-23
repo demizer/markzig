@@ -4,7 +4,7 @@ const token = @import("token.zig");
 const Lexer = @import("lexer.zig").Lexer;
 
 pub fn ruleList(l: *Lexer) !?token.Token {
-    var index: u32 = l.index;
+    var index: usize = l.index;
     if (l.lastToken()) |lt| {
         if (lt.ID != token.TokenId.Whitespace) {
             log.Debugf("Last token not whitespace, got {}\n", .{lt.ID});

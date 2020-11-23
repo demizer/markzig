@@ -167,12 +167,12 @@ pub fn dockerRunJsonDiff(allocator: *mem.Allocator, actualJson: std.fs.File, exp
     defer allocator.free(filemount);
 
     var buffer2: [std.fs.MAX_PATH_BYTES]u8 = undefined;
-    const ejsonPath = try std.os.getFdPath(expectJson.handle, &buffer);
+    const ejsonPath = try std.os.getFdPath(expectJson.handle, &buffer2);
     var file2mount = try std.mem.concat(allocator, u8, &[_][]const u8{ ejsonPath, ":", ejsonPath });
     defer allocator.free(file2mount);
 
     // The long way around until there is a better way to compare json in Zig
-    var cmd = &[_][]const u8{ "docker", "run", "-t", "-v", filemount, "-v", file2mount, "-w", cwd, "--rm", "bwowk/json-diff", "-C", ejsonPath, ejsonPath };
+    var cmd = &[_][]const u8{ "docker", "run", "-t", "-v", filemount, "-v", file2mount, "-w", cwd, "--rm", "bwowk/json-diff", "-C", ajsonPath, ejsonPath };
     try debugPrintExecCommand(allocator, cmd);
 
     var diff = try exec(allocator, cwd, true, cmd);
@@ -201,10 +201,10 @@ pub fn compareJsonExpect(allocator: *mem.Allocator, expected: []const u8, value:
     // human readable diff
     var tmpDir = std.testing.tmpDir(std.fs.Dir.OpenDirOptions{});
     defer tmpDir.cleanup();
-    var expectJson = try writeFile(allocator, tmpDir.dir, "expect.json", expected);
-    defer expectJson.close();
     var actualJsonPath = try writeJson(allocator, tmpDir.dir, "actual.json", value);
     defer actualJsonPath.close();
+    var expectJson = try writeFile(allocator, tmpDir.dir, "expect.json", expected);
+    defer expectJson.close();
 
     // FIXME: replace with zig json diff
     dockerRunJsonDiff(allocator, actualJsonPath, expectJson) catch |err2| {

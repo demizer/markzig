@@ -32,11 +32,11 @@ const lexerRule = struct {
 
 pub const Lexer = struct {
     view: utf8.Utf8View,
-    index: u32,
+    index: usize,
     rules: ArrayList(lexerRule),
     tokens: ArrayList(Token),
     tokenIndex: usize,
-    lineNumber: u32,
+    lineNumber: usize,
     allocator: *mem.Allocator,
 
     pub fn init(allocator: *mem.Allocator, input: []const u8) !Lexer {
@@ -68,25 +68,41 @@ pub const Lexer = struct {
     }
 
     /// Back the lexer up by one token
-    pub fn backup(l: *Lexer) void {
+    pub fn backup(l: *Lexer) ?Token {
         const offset = l.lastToken().?.startOffset - 1;
         l.index = offset;
         l.tokenIndex -= 1;
+        return l.lastToken();
+    }
+
+    /// Will backup the lexer to the first not-whitespace and non-newline token.
+    pub fn backupToNonWhitespace(l: *Lexer) ?Token {
+        var btok: Token = undefined;
+        while (true) {
+            btok = l.backup().?;
+            if (btok.ID == TokenId.Whitespace or btok.ID == TokenId.Newline) continue;
+            break;
+        }
+        l.index = btok.startOffset - 1;
+        return btok;
     }
 
     pub fn fastForward(l: *Lexer, tok: Token) void {
-        l.index = tok.endOffset + 1;
+        log.Debug("fastForward: fast forwarding lexer!");
+        const newIndex = tok.endOffset + 1;
+        log.Debugf("fastForward: FROM l.index: {} l.view: '{Z}' l.tokenIndex: {} TO l.index: {} l.view: '{Z}' l.tokenIndex: {}\n", .{ l.index, l.getRune(l.index), l.tokenIndex, newIndex, l.getRune(l.index), l.index });
+        l.index = newIndex;
         l.tokenIndex = tok.index;
     }
 
     /// Get the next token from the input.
     pub fn next(l: *Lexer) !?Token {
-        log.Debugf("{}next: lexer pos: l.index: {} viewlen: {} l.tokenIndex: {} tokens.len: {}{}\n", .{ ttyCode(.Green), l.index, l.view.len, l.tokenIndex, l.tokens.items.len, ttyCode(.Reset) });
+        log.Debugf("{}next: lexer pos: l.view: '{Z}' l.index: {} viewlen: {} l.tokenIndex: {} tokens.len: {}{}\n", .{ ttyCode(.Green), l.getRune(l.index), l.index, l.view.len, l.tokenIndex, l.tokens.items.len, ttyCode(.Reset) });
         if (l.tokens.items.len > 0 and l.tokenIndex < l.tokens.items.len - 1) {
             l.tokenIndex += 1;
             const lastTok = if (l.lastToken()) |tok| tok else return null;
             l.index = lastTok.endOffset + 1;
-            log.Debugf("{}next: returning token from buffer: l.index: {} l.tokenIndex: {}{}\n", .{ ttyCode(.Green), l.index, l.tokenIndex, ttyCode(.Reset) });
+            log.Debugf("{}next: returning token from buffer: l.string: '{Z}' l.index: {} l.tokenIndex: {}{}\n", .{ ttyCode(.Green), lastTok.string, l.index, l.tokenIndex, ttyCode(.Reset) });
             return lastTok;
         } else if (l.tokens.items.len > 0 and l.index == l.view.len) {
             if (l.lastToken()) |tok| {
@@ -103,6 +119,14 @@ pub const Lexer = struct {
             }
         }
         return null;
+    }
+
+    /// Skip the next token
+    pub fn skipNext(l: *Lexer) !void {
+        log.Debug("in skipNext");
+        if (try l.next()) |tok| {
+            log.Debugf("skipped token id: {} index: {} str: {}\n", .{ tok.ID, tok.index, tok.string });
+        }
     }
 
     /// Peek at the next token.
@@ -135,8 +159,26 @@ pub const Lexer = struct {
         return tok;
     }
 
+    /// Peek at the next token is id
+    pub fn peekToID(l: *Lexer, id: TokenId) !?Token {
+        var indexBefore = l.index;
+        var tokenIndexBefore = l.tokenIndex;
+        var tok: ?Token = null;
+        while (try l.next()) |ptok| {
+            if (ptok.ID == TokenId.EOF) break;
+            if (ptok.ID == id) {
+                log.Debugf("peekToID: index: {} string: {}\n", .{ ptok.ID, ptok.string });
+                tok = ptok;
+                break;
+            }
+        }
+        l.index = indexBefore;
+        l.tokenIndex = tokenIndexBefore;
+        return tok;
+    }
+
     /// Gets a codepoint at index from the input. Returns null if index exceeds the length of the view.
-    pub fn getRune(l: *Lexer, index: u32) ?[]const u8 {
+    pub fn getRune(l: *Lexer, index: usize) ?[]const u8 {
         return l.view.index(index);
     }
 
@@ -155,14 +197,14 @@ pub const Lexer = struct {
         log.Debugf("{}{}: {}{}\n", .{ ttyCode(.Magenta), msg, buf.items, ttyCode(.Reset) });
     }
 
-    pub fn emit(l: *Lexer, tok: TokenId, startOffset: u32, endOffset: u32) !?Token {
+    pub fn emit(l: *Lexer, tok: TokenId, startOffset: usize, endOffset: usize) !?Token {
         var str = l.view.slice(startOffset, endOffset);
         // check for diacritic
-        var nEndOffset: u32 = endOffset - 1;
+        var nEndOffset: usize = endOffset - 1;
         if ((endOffset - startOffset) == 1 or nEndOffset < startOffset) {
             nEndOffset = startOffset;
         }
-        var column: u32 = l.offsetToColumn(startOffset);
+        var column: usize = l.offsetToColumn(startOffset);
         if (tok == TokenId.EOF) {
             column = l.tokens.items[l.tokens.items.len - 1].column;
             l.lineNumber -= 1;
@@ -188,9 +230,9 @@ pub const Lexer = struct {
     }
 
     /// Returns the column number of offset translated from the start of the line
-    pub fn offsetToColumn(l: *Lexer, offset: u32) u32 {
-        var i: u32 = offset;
-        var start: u32 = 1;
+    pub fn offsetToColumn(l: *Lexer, offset: usize) usize {
+        var i: usize = offset;
+        var start: usize = 1;
         var char: []const u8 = "";
         var foundLastNewline: bool = false;
         if (offset > 0) {
@@ -259,7 +301,7 @@ pub const Lexer = struct {
     pub fn isPunctuation(l: *Lexer, rune: []const u8) bool {
         // Check for ASCII punctuation characters...
         //
-        // FIXME: Check against the unicode punctuation tables... there isn't a Zig library that does this that I have found.
+        // FIXME: Check against the unicode punctuation tables... use zunicode library.
         //
         // A punctuation character is an ASCII punctuation character or anything in the general Unicode categories Pc, Pd,
         // Pe, Pf, Pi, Po, or Ps.
@@ -325,18 +367,16 @@ pub const Lexer = struct {
         return true;
     }
 
-    /// Skip the next token
-    pub fn skipNext(l: *Lexer) !void {
-        log.Debug("in skipNext");
-        if (try l.next()) |tok| {
-            log.Debugf("skipped token id: {} index: {} str: {}\n", .{ tok.ID, tok.index, tok.string });
-        }
+    /// Checks tok to see if it contains tabs. If it does it returns the length of the string with each tab converted to four
+    /// spaces. If tok does not contain tabs, the string length is returned.
+    pub fn strLenWithTabConversion(l: Lexer, tok: Token) u64 {
+        return mem.count(u8, tok.string, "\t") * 3 + tok.string.len;
     }
 };
 
 /// Get all the whitespace characters greedly.
 pub fn ruleWhitespace(t: *Lexer) !?Token {
-    var index: u32 = t.index;
+    var index: usize = t.index;
     while (t.getRune(index)) |val| {
         log.Debugf("ruleWhitespace val: {Z}\n", .{val});
         if (t.isWhitespace(val)) {

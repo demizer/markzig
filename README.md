@@ -1,7 +1,7 @@
 # Markzig
 
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/demizer/markzig/Test)
-![Test Status: 5/649](https://img.shields.io/badge/Specs-5%2F649-brightgreen.svg)
+![Test Status: 5/649](https://img.shields.io/badge/Tests-5%2F649-brightgreen.svg)
 
 CommonMark compliant Markdown parsing for Zig!
 

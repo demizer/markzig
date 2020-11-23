@@ -4,7 +4,7 @@ const token = @import("token.zig");
 const Lexer = @import("lexer.zig").Lexer;
 
 pub fn ruleInline(l: *Lexer) !?token.Token {
-    var index: u32 = l.index;
+    var index: usize = l.index;
     while (l.getRune(index)) |val| {
         log.Debugf("ruleInline rune: {Z}\n", .{val});
         if (l.isLetter(val)) {

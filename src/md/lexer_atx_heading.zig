@@ -4,7 +4,7 @@ const Lexer = @import("lexer.zig").Lexer;
 const Token = @import("token.zig").Token;
 
 pub fn ruleAtxHeader(l: *Lexer) !?Token {
-    var index: u32 = l.index;
+    var index: usize = l.index;
     while (l.getRune(index)) |val| {
         if (mem.eql(u8, "#", val)) {
             index += 1;

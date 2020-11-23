@@ -43,11 +43,11 @@ pub const TokenId = enum {
 pub const Token = struct {
     index: usize,
     ID: TokenId,
-    startOffset: u32,
-    endOffset: u32,
+    startOffset: usize,
+    endOffset: usize,
     string: []const u8,
-    lineNumber: u32,
-    column: u32,
+    lineNumber: usize,
+    column: usize,
 
     pub fn jsonStringify(
         value: @This(),

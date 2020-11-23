@@ -2,28 +2,36 @@ const std = @import("std");
 const mem = std.mem;
 const log = @import("log.zig");
 const ttyCode = log.logger.TTY.Code;
-const State = @import("ast.zig").State;
 const Parser = @import("parse.zig").Parser;
 const Node = @import("parse.zig").Node;
 const Lexer = @import("lexer.zig").Lexer;
 const Token = @import("token.zig").Token;
 const TokenId = @import("token.zig").TokenId;
+const stateCodeBlock = @import("parse_codeblock.zig").stateCodeBlock;
 
-pub fn stateBulletList(p: *Parser) !void {
+// FIXME: should be part of the parser struct, but that would make the parse.zig file massive
+// FIXME: https://github.com/ziglang/zig/issues/5132 solves this problem
+pub fn stateBulletList(p: *Parser) !?Node {
     log.Debug("stateAtxHeader: START");
-    var openTok = if (p.lex.lastToken()) |lt| lt else return;
+    defer log.Debug("stateBulletList: END");
+    var openTok = if (p.lex.lastToken()) |lt| lt else return null;
 
     if (try p.lex.peekNext()) |tok| {
-        // log.Debugf("{}stateBulletList tokenIndex: {} openTok: '{}' id: {} len: {}, tok: '{}' id: {} len: {}{}\n", .{
-        //     ttyCode(.Green), p.lex.tokenIndex, openTok.string, openTok.ID, openTok.string.len,
-        //     tok.string, tok.ID, tok.string.len, ttyCode(.Reset),
-        // });
         if (openTok.ID != TokenId.BulletListMarker and (tok.ID != TokenId.Whitespace and tok.string.len > 4)) {
             log.Debug("Bullet list not found");
-            return;
+            return null;
         }
     }
-    log.Debugf("{}Found Bullet list!{}\n", .{ ttyCode(.Red), ttyCode(.Reset) });
+
+    log.Debugf("{}Found Bullet list!{}\n", .{ ttyCode(.Yellow), ttyCode(.Reset) });
+    try p.lex.skipNext();
+    const startTok = if (try p.lex.next()) |t| t else return null;
+    log.Debugf("{}stateBulletList startTok ID: {} String: {Z}{}\n", .{ ttyCode(.Yellow), startTok.ID, startTok.string, ttyCode(.Reset) });
+
+    // The minimum indentation needed for subsequent lex items to be considered part of the list
+    // item
+    const indentMin = startTok.column - 1;
+
     var new = Node{
         .ID = Node.ID.BulletList,
         .Value = openTok.string,
@@ -36,11 +44,6 @@ pub fn stateBulletList(p: *Parser) !void {
         .Children = std.ArrayList(Node).init(p.allocator),
         .Level = 0,
     };
-    try p.lex.skipNext();
-
-    // Only need to see the position for now
-    var startTok = if (try p.lex.next()) |t| t else return;
-    log.Debugf("{}stateBulletList startTok ID: {} String: {Z}{}\n", .{ ttyCode(.Yellow), startTok.ID, startTok.string, ttyCode(.Reset) });
 
     try new.Children.append(Node{
         .ID = Node.ID.ListItem,
@@ -51,10 +54,27 @@ pub fn stateBulletList(p: *Parser) !void {
         .Level = 0,
     });
 
-    var listItem: *std.ArrayList(Node) = &new.Children.items[0].Children;
     var buf = try std.ArrayListSentineled(u8, 0).init(p.allocator, startTok.string);
     defer buf.deinit();
-    // log.Debugf("buf: '{Z}'\n", .{buf.span()});
+
+    var listItem: *std.ArrayList(Node) = &new.Children.items[0].Children;
+    try listItem.append(Node{
+        .ID = Node.ID.Text,
+        .Value = buf.toOwnedSlice(),
+        .PositionStart = Node.Position{
+            .Line = startTok.lineNumber,
+            .Column = startTok.column,
+            .Offset = startTok.startOffset,
+        },
+        .PositionEnd = Node.Position{
+            .Line = startTok.lineNumber,
+            .Column = startTok.column + (startTok.endOffset - startTok.startOffset),
+            .Offset = startTok.endOffset,
+        },
+        .Children = std.ArrayList(Node).init(p.allocator),
+        .Level = 0,
+    });
+    p.childTarget = listItem;
 
     while (try p.lex.next()) |ntok| {
         log.Debugf("{}stateBulletList ntok {}{}\n", .{ ttyCode(.Magenta), ntok.ID, ttyCode(.Reset) });
@@ -62,6 +82,19 @@ pub fn stateBulletList(p: *Parser) !void {
             log.Debug("skipping whitespace");
             continue;
         } else if (ntok.ID == TokenId.Newline) {
+            log.Debug("stateBulletList: peek found newline");
+            // See if next token would start a code block
+            if (try p.lex.peekToID(TokenId.Whitespace)) |ptok| {
+                if (p.lex.strLenWithTabConversion(ptok) > indentMin) {
+                    log.Debugf("{}stateBulletList: found possible code block{}\n", .{ ttyCode(.Yellow), ttyCode(.Reset) });
+                    p.lex.fastForward(ptok);
+                    if (try stateCodeBlock(p)) |retTok| {
+                        log.Debug("stateBulletList: stateCodeBlock returned a token!");
+                        new.Children.items[0].PositionEnd = retTok.PositionEnd;
+                        break;
+                    }
+                }
+            }
             // Found a newline... look ahead and see if the columns line up
             log.Debug("peeking to next non-whitespace");
             if (try p.lex.peekToNonWhitespace()) |peekTok| {
@@ -73,24 +106,7 @@ pub fn stateBulletList(p: *Parser) !void {
                     break;
                 } else {
                     log.Debug("next non-whitespace columns are aligned");
-                    log.Debugf("listItem len: {} buf: '{Z}'\n", .{ listItem.items.len, buf.span() });
-                    // and add the previous item as a child to the list item
-                    try listItem.append(Node{
-                        .ID = Node.ID.Text,
-                        .Value = buf.toOwnedSlice(),
-                        .PositionStart = Node.Position{
-                            .Line = startTok.lineNumber,
-                            .Column = startTok.column,
-                            .Offset = startTok.startOffset,
-                        },
-                        .PositionEnd = Node.Position{
-                            .Line = startTok.lineNumber,
-                            .Column = startTok.column + (startTok.endOffset - startTok.startOffset),
-                            .Offset = startTok.endOffset,
-                        },
-                        .Children = std.ArrayList(Node).init(p.allocator),
-                        .Level = 0,
-                    });
+                    // log.Debugf("listItem len: {} buf: '{Z}'\n", .{ listItem.items.len, buf.span() });
                     try listItem.append(Node{
                         .ID = Node.ID.Text,
                         .Value = peekTok.string,
@@ -117,17 +133,17 @@ pub fn stateBulletList(p: *Parser) !void {
         // Check if the next token has the same colum as the list start token
         if (ntok.ID == TokenId.EOF or !p.lex.checkAlignment(startTok, ntok)) {
             log.Debugf("{}found ({} = '{Z}') exiting {}\n", .{ ttyCode(.Red), ntok.ID, ntok.string, ttyCode(.Reset) });
-            if (ntok.ID == TokenId.EOF) p.lex.backup();
+            if (ntok.ID == TokenId.EOF) {
+                _ = p.lex.backup().?;
+            }
             break;
         } else if (ntok.ID != TokenId.Newline and ntok.ID != TokenId.Whitespace) {
             try buf.appendSlice(ntok.string);
         }
     }
 
-    // log.Debugf("before append: buf: '{Z}'\n", .{buf.span()});
+    p.childTarget = null;
     new.PositionEnd = new.Children.items[new.Children.items.len - 1].PositionEnd;
-    try p.root.append(new);
-    p.state = Parser.State.Start;
-    // log.Debugf("index: {} viewlen: {}\n", .{ p.lex.index, p.lex.view.bytes.len });
-    log.Debug("stateBulletList: END");
+    try p.appendNode(new);
+    return new;
 }

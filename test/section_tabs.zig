@@ -134,3 +134,33 @@ test "Test Example 004" {
         std.os.exit(1);
     }
 }
+
+// "markdown": "- foo\n\n\t\tbar\n",
+// "html": "<ul>\n<li>\n<p>foo</p>\n<pre><code>  bar\n</code></pre>\n</li>\n</ul>\n",
+test "Test Example 005" {
+    const testNumber: u8 = 5;
+    const parserInput = try testUtil.getTest(allocator, testNumber, testUtil.TestKey.markdown);
+    testUtil.dumpTest(parserInput);
+    var p = Parser.init(allocator);
+    defer p.deinit();
+    _ = try p.parse(parserInput);
+    log.Debug("Testing lexer");
+    const expectLexerJson = @embedFile("expect/01-section-tabs/testl_005.json");
+    if (try testUtil.compareJsonExpect(allocator, expectLexerJson, p.lex.tokens.items)) |ajson| {
+        // log.Errorf("LEXER TEST FAILED! lexer tokens (in json):\n{}\n", .{ajson});
+        std.os.exit(1);
+    }
+    log.Debug("Testing parser");
+    const expectParserJson = @embedFile("expect/01-section-tabs/testp_005.json");
+    if (try testUtil.compareJsonExpect(allocator, expectParserJson, p.root.items)) |ajson| {
+        // log.Errorf("PARSER TEST FAILED! parser tree (in json):\n{}\n", .{ajson});
+        std.os.exit(1);
+    }
+    log.Debug("Testing html translator");
+    const expectHtml = try testUtil.getTest(allocator, testNumber, testUtil.TestKey.html);
+    defer allocator.free(expectHtml);
+    if (try testUtil.compareHtmlExpect(allocator, expectHtml, &p.root)) |ahtml| {
+        // log.Errorf("HTML TRANSLATE TEST FAILED! html:\n\n'{}'\n", .{ahtml});
+        std.os.exit(1);
+    }
+}

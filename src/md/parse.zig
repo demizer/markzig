@@ -9,9 +9,6 @@ usingnamespace @import("parse_atx_heading.zig");
 usingnamespace @import("parse_codeblock.zig");
 usingnamespace @import("parse_list.zig");
 
-/// Function prototype for a State Transition in the Parser
-pub const StateTransition = fn (lexer: *Lexer) anyerror!?AstNode;
-
 pub const Node = struct {
     ID: ID,
     Value: ?[]const u8,
@@ -21,12 +18,12 @@ pub const Node = struct {
 
     Children: std.ArrayList(Node),
 
-    Level: u32,
+    Level: usize,
 
     pub const Position = struct {
-        Line: u32,
-        Column: u32,
-        Offset: u32,
+        Line: usize,
+        Column: usize,
+        Offset: usize,
     };
 
     pub const ID = enum {
@@ -164,11 +161,14 @@ pub const Node = struct {
         return;
     }
 
+    // FIXME Supportinferred error sets in recursion https://github.com/ziglang/zig/issues/2971
+    // const Error = error{Bad};
+
     pub fn htmlStringify(
         value: @This(),
         options: StringifyOptions,
         writer: anytype,
-    ) !void {
+    ) @TypeOf(writer).Error!void {
         var child_options = options;
         switch (value.ID) {
             .AtxHeading => {
@@ -184,22 +184,29 @@ pub const Node = struct {
             .CodeBlock => {
                 var lvl = value.Level;
                 var text = value.Children.items[0].Value;
-                _ = try writer.print("<pre><code>{}</code></pre>", .{text});
+                // _ = try writer.print("<pre><code>{}{}</code></pre>", .{ value.Value, text });
+                _ = try writer.writeAll("<pre><code>");
+                _ = try writer.writeAll(text.?);
                 if (child_options.whitespace) |child_whitespace| {
                     if (child_whitespace.separator) {
                         try writer.writeByte('\n');
                     }
                 }
+                _ = try writer.writeAll("</code></pre>\n");
             },
             .BulletList => {
-                _ = try writer.writeAll("<ul>\n<li>\n");
-                for (value.Children.items[0].Children.items) |item| {
-                    _ = try writer.print("<p>{}</p>\n", .{item.Value});
-                }
-                _ = try writer.writeAll("</li>\n</ul>\n");
+                _ = try writer.writeAll("<ul>\n");
+                for (value.Children.items) |item| try item.htmlStringify(options, writer);
+                _ = try writer.writeAll("</ul>\n");
             },
-            .ListItem => {},
-            .Text => {},
+            .ListItem => {
+                _ = try writer.writeAll("<li>\n");
+                for (value.Children.items) |item| try item.htmlStringify(options, writer);
+                _ = try writer.writeAll("</li>\n");
+            },
+            .Text => {
+                _ = try writer.print("<p>{}</p>\n", .{value.Value});
+            },
         }
     }
 };
@@ -209,21 +216,23 @@ pub const Parser = struct {
     allocator: *mem.Allocator,
 
     root: std.ArrayList(Node),
-    state: State,
+    childTarget: ?*std.ArrayList(Node),
+
+    // state: State,
     lex: Lexer,
 
-    pub const State = enum {
-        Start,
-        AtxHeader,
-        CodeBlock,
-    };
+    // pub const State = enum {
+    //     Start,
+    //     AtxHeader,
+    //     CodeBlock,
+    //     BulletList,
+    // };
 
-    pub fn init(
-        allocator: *mem.Allocator,
-    ) Parser {
+    pub fn init(allocator: *mem.Allocator) Parser {
         return Parser{
             .allocator = allocator,
-            .state = .Start,
+            // .state = .Start,
+            .childTarget = null,
             .root = std.ArrayList(Node).init(allocator),
             .lex = undefined,
         };
@@ -254,13 +263,13 @@ pub const Parser = struct {
                 log.Debugf("{}parsing next token id: {} index: {} str: '{Z}' tokenIndex: {}{}\n", .{ ttyCode(.Cyan), tok.ID, tok.index, tok.string, self.lex.tokenIndex, ttyCode(.Reset) });
                 switch (tok.ID) {
                     .BulletListMarker => {
-                        try stateBulletList(self);
+                        _ = try stateBulletList(self);
                     },
                     .Whitespace => {
-                        try stateCodeBlock(self);
+                        _ = try stateCodeBlock(self);
                     },
                     .AtxHeader => {
-                        try stateAtxHeader(self);
+                        _ = try stateAtxHeader(self);
                     },
                     .EOF => {
                         log.Debug("Found EOF");
@@ -272,5 +281,18 @@ pub const Parser = struct {
                 }
             }
         }
+    }
+
+    /// Appends a node to the root if childTarget is unset. If childTarget is set then the node is
+    /// appended to it. childTarget should be set when subparsing is being done, and unset when
+    /// finished.
+    pub fn appendNode(self: *Parser, node: Node) !void {
+        log.Debugf("appendNode: appending node.ID: {} node.Value: '{Z}'\n", .{ node.ID, node.Value });
+        if (self.childTarget) |target| {
+            log.Debug("appendNode: Appending to childTarget!");
+            return target.append(node);
+        }
+        log.Debug("appendNode: Appending to root!");
+        return self.root.append(node);
     }
 };
