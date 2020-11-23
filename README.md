@@ -2,7 +2,7 @@
 
 ![GitHub Workflow Build Status](https://github.com/demizer/markzig/workflows/Build/badge.svg)
 ![Github Workflow Test Status](https://github.com/demizer/markzig/workflows/Tests/badge.svg)
-![Tests Implemented: 5/649](https://img.shields.io/badge/Tests-5%2F649-brightgreen.svg)
+![Specs Implemented: 5/649](https://img.shields.io/badge/Specs%20Implemented-5%2F649-brightgreen.svg)
 
 CommonMark compliant Markdown parsing for Zig!
 
